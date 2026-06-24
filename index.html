@@ -1,0 +1,2392 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pipeline de Reclutamiento</title>
+<style>
+  :root{
+    /* Escala de grises neutra pura (zinc) — sin tinte azul */
+    --gray-50:#fafafa;
+    --gray-100:#f4f4f5;
+    --gray-150:#ececee;
+    --gray-200:#e4e4e7;
+    --gray-300:#d4d4d8;
+    --gray-400:#a1a1aa;
+    --gray-500:#71717a;
+    --gray-600:#52525b;
+    --gray-700:#3f3f46;
+    --gray-800:#27272a;
+    --gray-900:#18181b;
+    --gray-950:#0f0f11;
+
+    /* Roles semánticos */
+    --bg:var(--gray-100);            /* fondo general claro */
+    --panel:#ffffff;                 /* contenedores */
+    --panel-sunken:var(--gray-50);   /* inputs / zonas hundidas */
+    --ink:var(--gray-900);           /* texto principal */
+    --ink-soft:var(--gray-500);      /* texto secundario */
+    --line:var(--gray-200);          /* bordes */
+    --line-soft:var(--gray-150);     /* bordes sutiles */
+    --neutral-soft:var(--gray-100);
+
+    /* Sidebar gris oscuro neutro */
+    --nav-bg:var(--gray-900);
+    --nav-ink:var(--gray-300);
+    --nav-ink-soft:var(--gray-500);
+    --nav-hover:var(--gray-800);
+    --nav-active-bg:var(--gray-700);
+    --nav-active-ink:#ffffff;
+    --nav-line:var(--gray-800);
+
+    /* Acción primaria (azul) */
+    --accent:#2563eb;
+    --accent-hover:#1d4ed8;
+    --accent-soft:#dbeafe;
+    --accent-ink:#1e40af;
+
+    /* Positivo / advertencia / destructivo */
+    --ok:#15803d;
+    --ok-soft:#dcfce7;
+    --warn:#b45309;
+    --warn-soft:#fef3c7;
+    --bad:#dc2626;
+    --bad-hover:#b91c1c;
+    --bad-soft:#fee2e2;
+
+    --radius:8px;
+    --radius-lg:12px;
+    --mono: "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+    --sidebar-w:230px;
+    --sidebar-w-collapsed:64px;
+    --shadow-sm:0 1px 2px rgba(24,24,27,.06);
+    --shadow-md:0 4px 12px rgba(24,24,27,.08);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:14px;
+    line-height:1.45;
+  }
+
+  /* ---------- Shell layout ---------- */
+  .shell{display:flex;min-height:100vh;}
+
+  .sidebar{
+    width:var(--sidebar-w);flex:0 0 auto;
+    background:var(--nav-bg);color:var(--nav-ink);
+    padding:16px 12px;display:flex;flex-direction:column;gap:14px;
+    position:sticky;top:0;height:100vh;
+    transition:width .2s cubic-bezier(.4,0,.2,1);
+  }
+  .sidebar-header{
+    display:flex;align-items:flex-start;justify-content:space-between;gap:8px;
+    padding:4px 4px 2px 8px;min-height:38px;
+  }
+  .brand{overflow:hidden;flex:1 1 auto;min-width:0;}
+  .brand h1{font-size:14.5px;font-weight:700;letter-spacing:-0.01em;margin:0 0 3px;white-space:nowrap;color:#fff;}
+  .brand p{margin:0;font-size:10.5px;color:var(--nav-ink-soft);line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .collapse-btn{
+    flex:0 0 auto;width:30px;height:30px;border:none;border-radius:8px;cursor:pointer;
+    background:var(--gray-800);color:var(--nav-ink);
+    display:inline-flex;align-items:center;justify-content:center;
+    transition:background .15s, color .15s;
+  }
+  .collapse-btn svg{width:16px;height:16px;transition:transform .2s ease;}
+  .collapse-btn:hover{background:var(--gray-700);color:#fff;}
+
+  .nav{display:flex;flex-direction:column;gap:4px;}
+  .nav-btn{
+    display:flex;align-items:center;gap:11px;position:relative;
+    border:none;background:transparent;padding:10px 12px;border-radius:8px;
+    font-size:13.5px;font-weight:550;color:var(--nav-ink);cursor:pointer;text-align:left;width:100%;
+    transition:background .15s, color .15s;white-space:nowrap;overflow:hidden;
+  }
+  .nav-btn .nav-icon{
+    flex:0 0 22px;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;
+    color:currentColor;
+  }
+  .nav-btn .nav-icon svg{width:18px;height:18px;display:block;}
+  .nav-btn .nav-label{flex:1 1 auto;overflow:hidden;text-overflow:ellipsis;}
+  .nav-btn.active{background:var(--nav-active-bg);color:var(--nav-active-ink);font-weight:600;}
+  .nav-btn:hover:not(.active){background:var(--nav-hover);color:#fff;}
+  .nav-badge{
+    margin-left:auto;background:var(--bad);color:#fff;border-radius:99px;
+    font-size:10px;font-weight:700;padding:1px 6px;font-family:var(--mono);min-width:18px;text-align:center;
+  }
+  .sidebar-spacer{flex:1 1 auto;}
+  .sidebar-foot{font-size:10px;color:var(--nav-ink-soft);padding:0 10px;line-height:1.4;white-space:nowrap;overflow:hidden;}
+
+  /* ---- Collapsed state ---- */
+  .sidebar.collapsed{width:var(--sidebar-w-collapsed);padding:16px 10px;}
+  .sidebar.collapsed .sidebar-header{justify-content:center;padding:4px 0 2px;}
+  .sidebar.collapsed .brand{display:none;}
+  .sidebar.collapsed .nav-label,
+  .sidebar.collapsed .sidebar-foot{display:none;}
+  .sidebar.collapsed .nav-btn{justify-content:center;gap:0;padding:10px 0;}
+  .sidebar.collapsed .nav-badge{
+    position:absolute;top:5px;right:9px;margin-left:0;padding:0 4px;min-width:15px;font-size:9px;
+  }
+  .sidebar.collapsed .collapse-btn svg{transform:rotate(180deg);}
+
+  .main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;min-height:100vh;}
+  .app{max-width:1320px;width:100%;margin:0 auto;padding:22px 28px 28px;flex:1 1 auto;}
+
+  /* ---------- App footer (fijo al pie) ---------- */
+  .app-footer{
+    flex:0 0 auto;border-top:1px solid var(--line);background:var(--panel);
+    display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;
+    font-size:11.5px;color:var(--ink-soft);padding:12px 28px;
+  }
+  .app-footer .footer-credit{font-weight:600;color:var(--gray-600);}
+  .app-footer .footer-version{font-family:var(--mono);color:var(--gray-400);}
+
+  .topbar{
+    display:flex;justify-content:flex-end;align-items:center;
+    margin-bottom:18px;gap:14px;
+  }
+  .lang-switch{display:flex;gap:2px;background:var(--gray-150);padding:3px;border-radius:99px;}
+  .lang-btn{
+    border:none;background:transparent;padding:6px 13px;border-radius:99px;
+    font-size:12px;font-weight:700;color:var(--ink-soft);cursor:pointer;letter-spacing:.02em;
+    transition:background .15s, color .15s;
+  }
+  .lang-btn.active{background:var(--accent);color:#fff;}
+  .lang-btn:hover:not(.active){color:var(--ink);}
+
+  .view-title{margin-bottom:18px;}
+  .view-title h2{font-size:19px;font-weight:700;margin:0 0 3px;letter-spacing:-0.01em;}
+  .view-title p{margin:0;font-size:12.5px;color:var(--ink-soft);}
+
+  .view{display:none;}
+  .view.active{display:block;}
+
+  /* ---------- Dashboard ---------- */
+  .dash-toolbar{
+    display:flex;gap:10px;flex-wrap:wrap;align-items:center;
+    background:var(--panel);border:1px solid var(--line);border-radius:10px;
+    padding:12px 14px;margin-bottom:18px;box-shadow:var(--shadow-sm);
+  }
+  .dash-toolbar select, .dash-toolbar input[type="date"]{
+    padding:8px 10px;border:1px solid var(--gray-300);border-radius:7px;font-size:13px;
+    background:var(--panel);color:var(--ink);max-width:170px;
+  }
+  .dash-toolbar .dlabel{font-size:11px;color:var(--gray-500);font-weight:600;margin-right:-4px;}
+  .dash-toolbar .spacer{flex:1 1 auto;}
+
+  .kpi-grid{
+    display:grid;
+    grid-template-columns:repeat(6,1fr);
+    gap:12px;
+    margin-bottom:20px;
+  }
+  .kpi-card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:16px 16px 14px;
+    box-shadow:var(--shadow-sm);
+  }
+  .kpi-label{font-size:10.5px;color:var(--gray-500);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;font-weight:600;}
+  .kpi-value{font-size:28px;font-weight:700;font-family:var(--mono);letter-spacing:-0.02em;line-height:1;color:var(--gray-800);}
+  .kpi-sub{font-size:11px;color:var(--gray-400);margin-top:6px;}
+
+  .kpi-accent .kpi-value{color:var(--accent);}
+  .kpi-ok .kpi-value{color:var(--ok);}
+  .kpi-warn .kpi-value{color:var(--warn);}
+  .kpi-bad .kpi-value{color:var(--bad);}
+  .kpi-muted .kpi-value{color:var(--gray-500);}
+  .kpi-neutral .kpi-value{color:var(--gray-800);}
+
+  .panel-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin-bottom:16px;}
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:18px 20px;
+    box-shadow:var(--shadow-sm);
+  }
+  .panel.panel-wide{grid-column:1/-1;}
+  .panel h2{font-size:13.5px;font-weight:700;margin:0 0 14px;display:flex;justify-content:space-between;align-items:center;color:var(--gray-800);}
+  .panel h2 .count{font-family:var(--mono);font-weight:600;color:var(--gray-400);font-size:12px;}
+
+  .bar-row{display:grid;grid-template-columns:140px 1fr 40px;align-items:center;gap:10px;margin-bottom:9px;font-size:12.5px;}
+  .bar-row .lbl{color:var(--gray-700);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .bar-track{height:16px;background:var(--gray-150);border-radius:5px;overflow:hidden;}
+  .bar-fill{height:100%;background:var(--accent);border-radius:5px;}
+  .bar-row .val{font-family:var(--mono);text-align:right;color:var(--gray-500);}
+
+  .funnel{display:flex;flex-direction:column;gap:6px;}
+  .funnel-row{display:grid;grid-template-columns:150px 1fr 36px;align-items:center;gap:10px;font-size:12.5px;}
+  .funnel-track{height:18px;background:var(--gray-150);border-radius:5px;overflow:hidden;}
+  .funnel-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,var(--accent),#60a5fa);}
+
+  table.mini{width:100%;border-collapse:collapse;font-size:12.5px;}
+  table.mini th{text-align:left;color:var(--gray-400);font-weight:600;padding:6px 4px;border-bottom:1px solid var(--line);font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;}
+  table.mini td{padding:7px 4px;border-bottom:1px solid var(--line-soft);}
+  table.mini tr:last-child td{border-bottom:none;}
+
+  .badge{
+    display:inline-block;padding:2px 10px;border-radius:99px;font-size:11px;font-weight:600;
+    white-space:nowrap;
+  }
+  .badge-progress{background:var(--accent-soft);color:var(--accent-ink);}
+  .badge-hired{background:var(--ok-soft);color:var(--ok);}
+  .badge-hold{background:var(--warn-soft);color:var(--warn);}
+  .badge-rejected{background:var(--bad-soft);color:var(--bad);}
+  .badge-withdrawn{background:var(--gray-150);color:var(--gray-600);}
+  .badge-alert-overdue{background:var(--bad-soft);color:var(--bad);}
+  .badge-alert-stale{background:var(--warn-soft);color:var(--warn);}
+
+  /* trend chart */
+  .trend-wrap{overflow-x:auto;}
+  .trend-legend{display:flex;gap:18px;margin-top:10px;font-size:12px;color:var(--ink-soft);}
+  .trend-legend span{display:inline-flex;align-items:center;gap:6px;}
+  .legend-dot{width:9px;height:9px;border-radius:50%;display:inline-block;}
+
+  /* alerts list */
+  .alert-row{
+    display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid var(--line-soft);font-size:12.5px;
+  }
+  .alert-row:last-child{border-bottom:none;}
+  .alert-row .alert-name{font-weight:600;flex:1;color:var(--gray-800);}
+  .alert-row .alert-detail{color:var(--ink-soft);}
+
+  /* ---------- Database ---------- */
+  .toolbar{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    align-items:center;
+    margin-bottom:14px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:12px 14px;
+    box-shadow:var(--shadow-sm);
+  }
+  .toolbar input[type="text"]{
+    flex:1;min-width:180px;
+    padding:8px 12px;
+    border:1px solid var(--gray-300);
+    border-radius:7px;
+    font-size:13px;
+    background:var(--panel);
+  }
+  .toolbar select{
+    padding:8px 10px;
+    border:1px solid var(--gray-300);
+    border-radius:7px;
+    font-size:13px;
+    background:var(--panel);
+    color:var(--ink);
+    max-width:150px;
+  }
+  .toolbar .spacer{flex:1 1 auto;}
+  .btn{
+    padding:8px 14px;border-radius:7px;border:1px solid var(--line);
+    background:var(--panel);color:var(--gray-700);font-size:13px;font-weight:600;cursor:pointer;
+    transition:background .15s, border-color .15s, color .15s;white-space:nowrap;
+  }
+  .btn:hover{background:var(--gray-100);border-color:var(--gray-300);}
+  .btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .btn-primary:hover{background:var(--accent-hover);border-color:var(--accent-hover);}
+  .btn-danger{background:var(--bad);color:#fff;border-color:var(--bad);}
+  .btn-danger:hover{background:var(--bad-hover);border-color:var(--bad-hover);}
+  .btn-sm{padding:5px 10px;font-size:12px;}
+  .btn-ghost{background:transparent;border:1px solid var(--line);color:var(--gray-600);}
+  .btn-ghost:hover{background:var(--gray-100);}
+
+  /* ---- Botón X unificado (cerrar / eliminar) ---- */
+  .btn-x{
+    border:none;background:transparent;cursor:pointer;
+    width:30px;height:30px;border-radius:7px;flex:0 0 auto;
+    display:inline-flex;align-items:center;justify-content:center;
+    color:var(--gray-400);transition:background .15s, color .15s;padding:0;
+  }
+  .btn-x svg{width:16px;height:16px;display:block;}
+  .btn-x:hover{background:var(--bad-soft);color:var(--bad);}
+  .btn-x.btn-x-sm{width:26px;height:26px;border-radius:6px;}
+  .btn-x.btn-x-sm svg{width:14px;height:14px;}
+
+  .table-wrap{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    overflow:auto;
+    max-height:62vh;
+    box-shadow:var(--shadow-sm);
+  }
+  table.db{width:100%;border-collapse:collapse;font-size:12.5px;min-width:2050px;}
+  table.db thead th{
+    position:sticky;top:0;background:var(--gray-50);
+    text-align:left;padding:10px 10px;border-bottom:1px solid var(--line);
+    font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--gray-500);
+    cursor:pointer;white-space:nowrap;user-select:none;
+    z-index:2;
+  }
+  table.db thead th:hover{color:var(--gray-800);}
+  table.db thead th.sorted::after{content:" ▾";color:var(--accent);}
+  table.db thead th.sorted-asc::after{content:" ▴";color:var(--accent);}
+  table.db tbody td{padding:9px 10px;border-bottom:1px solid var(--line-soft);white-space:nowrap;color:var(--gray-700);}
+  table.db tbody tr:hover{background:var(--gray-50);}
+  table.db tbody tr{cursor:pointer;}
+  .cell-name{font-weight:600;color:var(--gray-900);}
+  .cell-muted{color:var(--gray-400);}
+  .actions-cell{display:flex;gap:6px;}
+
+  .results-bar{display:flex;justify-content:space-between;align-items:center;margin:10px 0 0;font-size:12px;color:var(--ink-soft);}
+
+  /* ---------- Config view ---------- */
+  .config-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .config-card{
+    background:var(--panel);border:1px solid var(--line);border-radius:10px;
+    padding:20px 22px;box-shadow:var(--shadow-sm);
+  }
+  .config-card.full{grid-column:1/-1;}
+  .config-card h3{font-size:14px;font-weight:700;margin:0 0 4px;color:var(--gray-800);}
+  .config-card .config-desc{font-size:12.5px;color:var(--ink-soft);margin:0 0 16px;}
+  .config-row{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
+  .config-row:last-child{margin-bottom:0;}
+  .config-row label{font-size:13px;font-weight:600;flex:0 0 auto;color:var(--gray-700);}
+  .config-row input[type="number"]{
+    width:90px;padding:8px 10px;border:1px solid var(--gray-300);border-radius:7px;font-size:13px;background:var(--panel);
+  }
+  .toggle{
+    position:relative;width:42px;height:24px;border-radius:99px;background:var(--gray-300);
+    border:1px solid var(--gray-300);cursor:pointer;flex:0 0 auto;transition:background .15s, border-color .15s;
+  }
+  .toggle.on{background:var(--accent);border-color:var(--accent);}
+  .toggle .knob{
+    position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;
+    transition:left .15s;box-shadow:0 1px 2px rgba(0,0,0,.2);
+  }
+  .toggle.on .knob{left:21px;}
+  .status-line{
+    display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--gray-600);
+    padding:10px 12px;background:var(--gray-50);border-radius:8px;margin-top:4px;
+  }
+  .status-dot{width:7px;height:7px;border-radius:50%;background:var(--ok);flex:0 0 auto;}
+  .status-dot.off{background:var(--gray-400);}
+  .manage-list{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
+  .manage-row{
+    display:flex;align-items:center;gap:8px;
+    border:1px solid var(--line);border-radius:8px;padding:7px 8px 7px 12px;background:var(--gray-50);
+  }
+  .manage-row span{flex:1;font-size:13.5px;color:var(--gray-700);}
+  .manage-row .manage-count{font-size:11px;color:var(--gray-400);font-family:var(--mono);}
+  .manage-add{display:flex;gap:8px;}
+  .manage-add input{flex:1;padding:9px 11px;border:1px solid var(--gray-300);border-radius:7px;font-size:13.5px;background:var(--panel);}
+  #fileImportInput{display:none;}
+
+  /* ---------- Modal ---------- */
+  .overlay{
+    display:none;position:fixed;inset:0;background:rgba(24,24,27,.5);
+    align-items:flex-start;justify-content:center;z-index:50;padding:40px 16px;overflow:auto;
+    backdrop-filter:blur(2px);
+  }
+  .overlay.active{display:flex;}
+  .modal{
+    background:var(--panel);border-radius:var(--radius-lg);width:100%;max-width:760px;
+    box-shadow:0 20px 50px rgba(24,24,27,.22);
+  }
+  .modal.modal-sm{max-width:480px;}
+  .modal-head{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:20px 24px 10px;
+  }
+  .modal-head h3{margin:0;font-size:16.5px;font-weight:700;letter-spacing:-0.01em;}
+  .modal-body{padding:14px 24px 20px;max-height:72vh;overflow:auto;}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px 18px;}
+  .form-grid .full{grid-column:1 / -1;}
+  .field label{
+    display:block;font-size:11px;font-weight:600;letter-spacing:.02em;
+    color:var(--gray-500);margin-bottom:5px;
+  }
+  .field input, .field select, .field textarea{
+    width:100%;padding:9px 11px;border:1px solid var(--gray-300);border-radius:7px;
+    font-size:13.5px;font-family:inherit;background:var(--panel);color:var(--ink);
+    transition:border-color .15s, box-shadow .15s;
+  }
+  .field textarea{resize:vertical;min-height:64px;}
+  .field input:focus, .field select:focus, .field textarea:focus{
+    outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);
+  }
+  .field-with-manage{display:flex;gap:8px;align-items:flex-end;}
+  .field-with-manage .field{flex:1;}
+  .icon-btn{
+    border:1px solid var(--gray-300);background:var(--panel);border-radius:7px;
+    width:38px;height:38px;flex:0 0 auto;cursor:pointer;color:var(--gray-500);
+    display:flex;align-items:center;justify-content:center;transition:background .15s, color .15s, border-color .15s;
+  }
+  .icon-btn svg{width:17px;height:17px;}
+  .icon-btn:hover{background:var(--gray-100);color:var(--gray-700);border-color:var(--gray-400);}
+  .modal-foot{
+    display:flex;justify-content:space-between;align-items:center;gap:10px;
+    padding:14px 24px 20px;
+  }
+  fieldset.section{
+    grid-column:1/-1;border:none;padding:0;margin:10px 0 0;
+  }
+  fieldset.section legend{
+    font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+    color:var(--accent);padding:0;margin-bottom:2px;
+  }
+
+  /* ---------- Status / stage history ---------- */
+  .current-status-row{display:flex;gap:8px;align-items:center;padding:8px 0 2px;flex-wrap:wrap;}
+  .history-block{border:1px solid var(--line);border-radius:10px;padding:14px;background:var(--gray-50);}
+  .history-list{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;max-height:220px;overflow:auto;}
+  .history-row{
+    display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);
+    border-radius:8px;padding:8px 10px;font-size:12.5px;flex-wrap:wrap;
+  }
+  .history-row .history-date{font-family:var(--mono);color:var(--ink-soft);flex:0 0 86px;}
+  .history-row .history-badges{display:flex;gap:6px;flex-wrap:wrap;flex:1 1 auto;}
+  .history-row .history-note{color:var(--ink-soft);font-size:11.5px;width:100%;}
+  .history-row .history-actions{display:flex;gap:2px;margin-left:auto;flex:0 0 auto;}
+  .history-row.editing{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft);}
+  .history-row .history-edit-fields{display:flex;gap:6px;flex-wrap:wrap;width:100%;align-items:center;}
+  .history-row .history-edit-fields input,
+  .history-row .history-edit-fields select{
+    padding:6px 8px;border:1px solid var(--gray-300);border-radius:6px;font-size:12px;background:var(--panel);
+  }
+  .history-empty{color:var(--ink-soft);font-size:12.5px;padding:6px 2px;}
+  .history-add-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+  .history-add-row input[type="date"],
+  .history-add-row select{
+    padding:8px 9px;border:1px solid var(--gray-300);border-radius:7px;font-size:12.5px;background:var(--panel);
+  }
+  .history-add-row input[type="text"]{
+    flex:1;min-width:140px;padding:8px 9px;border:1px solid var(--gray-300);border-radius:7px;font-size:12.5px;background:var(--panel);
+  }
+  .icon-btn-xs{
+    border:1px solid var(--gray-300);background:var(--panel);border-radius:6px;
+    width:28px;height:28px;flex:0 0 auto;cursor:pointer;color:var(--gray-500);
+    display:flex;align-items:center;justify-content:center;transition:background .15s, color .15s;
+  }
+  .icon-btn-xs svg{width:14px;height:14px;}
+  .icon-btn-xs:hover{background:var(--gray-100);color:var(--gray-700);}
+
+  .empty-state{
+    text-align:center;padding:60px 20px;color:var(--ink-soft);
+  }
+  .empty-state strong{display:block;color:var(--ink);font-size:15px;margin-bottom:6px;}
+
+  ::-webkit-scrollbar{height:10px;width:10px;}
+  ::-webkit-scrollbar-thumb{background:var(--gray-300);border-radius:6px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+
+  @media (max-width: 1000px){
+    .kpi-grid{grid-template-columns:repeat(2,1fr);}
+    .panel-grid{grid-template-columns:1fr;}
+    .config-grid{grid-template-columns:1fr;}
+  }
+  @media (max-width: 820px){
+    .shell{flex-direction:column;}
+    .sidebar, .sidebar.collapsed{
+      width:100%;height:auto;position:relative;flex-direction:row;align-items:center;
+      padding:8px 12px;overflow-x:auto;gap:6px;transition:none;
+    }
+    .sidebar-header, .sidebar-spacer, .sidebar-foot{display:none;}
+    .nav{flex-direction:row;gap:4px;}
+    .sidebar .nav-label{display:inline;opacity:1;width:auto;}
+    .sidebar.collapsed .nav-btn{justify-content:flex-start;gap:11px;padding:9px 14px;}
+    .nav-btn{padding:9px 14px;}
+    .app{padding:18px 16px 20px;}
+    .app-footer{padding:12px 16px;}
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="brand">
+        <h1 data-i18n="appTitle">Pipeline de Reclutamiento</h1>
+        <p data-i18n="appSubtitle">Base de candidatos y métricas de selección</p>
+      </div>
+      <button class="collapse-btn" id="sidebarCollapseBtn" title="Colapsar menú" aria-label="Colapsar menú">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+    </div>
+    <div class="nav">
+      <button class="nav-btn active" data-view="dashboard" data-i18n-title="navDashboard">
+        <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg></span>
+        <span class="nav-label" data-i18n="navDashboard">Dashboard</span>
+      </button>
+      <button class="nav-btn" data-view="database" data-i18n-title="navDatabase">
+        <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.66 3.58 3 8 3s8-1.34 8-3V5"/><path d="M4 11v6c0 1.66 3.58 3 8 3s8-1.34 8-3v-6"/></svg></span>
+        <span class="nav-label" data-i18n="navDatabase">Base de Datos</span>
+      </button>
+      <button class="nav-btn" data-view="config" data-i18n-title="navConfig">
+        <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
+        <span class="nav-label" data-i18n="navConfig">Configuración</span>
+        <span class="nav-badge" id="navAlertBadge" style="display:none;"></span>
+      </button>
+    </div>
+    <div class="sidebar-spacer"></div>
+    <div class="sidebar-foot nav-label" data-i18n="sidebarFoot">Los datos se guardan en este navegador.</div>
+  </nav>
+
+  <div class="main">
+    <div class="app">
+
+      <div class="topbar">
+        <div class="lang-switch">
+          <button class="lang-btn" data-lang="es">ES</button>
+          <button class="lang-btn" data-lang="en">EN</button>
+        </div>
+      </div>
+
+      <!-- ===================== DASHBOARD ===================== -->
+      <section class="view active" id="view-dashboard">
+        <div class="view-title">
+          <h2 data-i18n="navDashboard">Dashboard</h2>
+          <p data-i18n="dashSubtitle">Métricas del pipeline en base a los filtros seleccionados</p>
+        </div>
+
+        <div class="dash-toolbar">
+          <span class="dlabel" data-i18n="filtersLabel">Filtros:</span>
+          <select id="dashFilterPosition"><option value="" data-i18n="allPositions">Posición: todas</option></select>
+          <select id="dashFilterRecruiter"><option value="" data-i18n="allRecruiters">Reclutador/a: todos</option></select>
+          <select id="dashFilterClient"><option value="" data-i18n="allClients">Cliente: todos</option></select>
+          <span class="dlabel" data-i18n="dateFromLabel">Desde</span>
+          <input type="date" id="dashFilterDateFrom">
+          <span class="dlabel" data-i18n="dateToLabel">Hasta</span>
+          <input type="date" id="dashFilterDateTo">
+          <div class="spacer"></div>
+          <button class="btn btn-ghost" id="dashClearFilters" data-i18n="clearFilters">Limpiar filtros</button>
+        </div>
+
+        <div class="kpi-grid" id="kpiGrid"></div>
+
+        <div class="panel-grid">
+          <div class="panel panel-wide">
+            <h2><span data-i18n="trendTitle">Tendencia mensual</span> <span class="count" id="trendRange"></span></h2>
+            <div class="trend-wrap" id="trendChart"></div>
+          </div>
+        </div>
+
+        <div class="panel-grid">
+          <div class="panel">
+            <h2><span data-i18n="alertsTitle">Alertas</span> <span class="count" id="alertsCount"></span></h2>
+            <div id="alertsList"></div>
+          </div>
+          <div class="panel">
+            <h2><span data-i18n="followupTitle">Seguimientos pendientes</span> <span class="count" id="followupCount"></span></h2>
+            <table class="mini" id="followupTable">
+              <thead><tr><th data-i18n="colCandidate">Candidato</th><th data-i18n="colNextFollowUp">Próximo seguimiento</th><th data-i18n="colStatus">Estado</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel-grid">
+          <div class="panel">
+            <h2><span data-i18n="funnelTitle">Embudo de selección</span> <span class="count" id="funnelTotal"></span></h2>
+            <div class="funnel" id="funnelChart"></div>
+          </div>
+          <div class="panel">
+            <h2 data-i18n="statusTitle">Estado actual</h2>
+            <div id="statusChart"></div>
+          </div>
+        </div>
+
+        <div class="panel-grid">
+          <div class="panel">
+            <h2 data-i18n="byPositionTitle">Candidatos por posición</h2>
+            <div id="positionChart"></div>
+          </div>
+          <div class="panel">
+            <h2 data-i18n="byRecruiterTitle">Candidatos por reclutador/a</h2>
+            <div id="recruiterChart"></div>
+          </div>
+        </div>
+
+        <div class="panel-grid">
+          <div class="panel">
+            <h2 data-i18n="byClientTitle">Candidatos por cliente</h2>
+            <div id="clientChart"></div>
+          </div>
+          <div class="panel">
+            <h2 data-i18n="outcomeTitle">Resultado de procesos cerrados</h2>
+            <div id="outcomeChart"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== DATABASE ===================== -->
+      <section class="view" id="view-database">
+        <div class="view-title">
+          <h2 data-i18n="navDatabase">Base de Datos</h2>
+          <p data-i18n="dbSubtitle">Todos los candidatos del pipeline, filtrables y exportables</p>
+        </div>
+
+        <div class="toolbar">
+          <input type="text" id="searchInput" data-i18n-ph="searchPlaceholder" placeholder="Buscar por nombre, empresa, universidad, notas...">
+          <select id="filterPosition"><option value="" data-i18n="allPositions">Posición: todas</option></select>
+          <select id="filterStatus"><option value="" data-i18n="allStatuses">Estado: todos</option></select>
+          <select id="filterStage"><option value="" data-i18n="allStages">Etapa: todas</option></select>
+          <select id="filterRecruiter"><option value="" data-i18n="allRecruiters">Reclutador/a: todos</option></select>
+          <select id="filterClient"><option value="" data-i18n="allClients">Cliente: todos</option></select>
+          <div class="spacer"></div>
+          <button class="btn btn-primary" id="addCandidateBtn" data-i18n="newCandidateBtn">+ Nuevo candidato</button>
+        </div>
+
+        <div class="table-wrap">
+          <table class="db" id="dbTable">
+            <thead>
+              <tr>
+                <th data-key="firstName" data-i18n="colFirstName">Nombre</th>
+                <th data-key="lastName" data-i18n="colLastName">Apellido</th>
+                <th data-key="jobTitle" data-i18n="colJobTitle">Título profesional</th>
+                <th data-key="email" data-i18n="colEmail">Mail</th>
+                <th data-key="phone" data-i18n="colPhone">Celular</th>
+                <th data-key="position" data-i18n="colPosition">Posición</th>
+                <th data-key="client" data-i18n="colClient">Cliente</th>
+                <th data-key="team" data-i18n="colTeam">Equipo</th>
+                <th data-key="seniority" data-i18n="colSeniority">Seniority</th>
+                <th data-key="location" data-i18n="colLocation">Ubicación</th>
+                <th data-key="university" data-i18n="colUniversity">Universidad</th>
+                <th data-key="experience" data-i18n="colExperience">Años exp.</th>
+                <th data-key="currentCompany" data-i18n="colCurrentCompany">Empresa actual</th>
+                <th data-key="salaryExpectation" data-i18n="colSalaryExpectation">Pretensión salarial</th>
+                <th data-key="currency" data-i18n="colCurrency">Moneda</th>
+                <th data-key="availability" data-i18n="colAvailability">Disponibilidad</th>
+                <th data-key="source" data-i18n="colSource">Fuente</th>
+                <th data-key="recruiter" data-i18n="colRecruiter">Reclutador/a</th>
+                <th data-key="status" data-i18n="colStatus">Estado</th>
+                <th data-key="stage" data-i18n="colStage">Etapa</th>
+                <th data-key="outcome" data-i18n="colOutcome">Resultado</th>
+                <th data-key="englishLevel" data-i18n="colEnglishLevel">Nivel inglés</th>
+                <th data-key="interviewDate" data-i18n="colInterviewDate">Fecha entrevista</th>
+                <th data-key="lastContact" data-i18n="colLastContact">Último contacto</th>
+                <th data-key="nextFollowUp" data-i18n="colNextFollowUp">Próximo seguimiento</th>
+                <th data-key="clientSubmissionDate" data-i18n="colClientSubmissionDate">Envío a cliente</th>
+                <th data-key="clientFeedback" data-i18n="colClientFeedback">Feedback cliente</th>
+                <th data-key="notes" data-i18n="colNotes">Notas</th>
+                <th data-i18n="colActions">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="dbTbody"></tbody>
+          </table>
+        </div>
+        <div class="results-bar">
+          <span id="resultsCount"></span>
+          <span data-i18n="rowHint">Clic en una fila para editar el registro completo</span>
+        </div>
+      </section>
+
+      <!-- ===================== CONFIG ===================== -->
+      <section class="view" id="view-config">
+        <div class="view-title">
+          <h2 data-i18n="navConfig">Configuración</h2>
+          <p data-i18n="configSubtitle">Respaldo de datos, alertas y listas maestras</p>
+        </div>
+
+        <div class="config-grid">
+
+          <div class="config-card">
+            <h3 data-i18n="backupTitle">Respaldo automático (CSV)</h3>
+            <p class="config-desc" data-i18n="backupDesc">Descarga periódica de un CSV con todos los candidatos. El archivo se guarda en la carpeta de Descargas de tu navegador — si esa carpeta está sincronizada con Google Drive, el respaldo queda disponible ahí también.</p>
+            <div class="config-row">
+              <label data-i18n="backupEnableLabel">Activar respaldo automático</label>
+              <div class="toggle" id="autoBackupToggle"><div class="knob"></div></div>
+            </div>
+            <div class="config-row">
+              <label data-i18n="backupIntervalLabel">Intervalo (minutos)</label>
+              <input type="number" id="autoBackupInterval" min="1" max="1440" value="30">
+            </div>
+            <div class="status-line">
+              <span class="status-dot off" id="backupStatusDot"></span>
+              <span id="backupStatusText" data-i18n="backupStatusOff">Respaldo automático desactivado</span>
+            </div>
+          </div>
+
+          <div class="config-card">
+            <h3 data-i18n="manualBackupTitle">Exportar / Importar manual</h3>
+            <p class="config-desc" data-i18n="manualBackupDesc">Descargá un CSV en cualquier momento, o restaurá el pipeline desde un archivo exportado previamente.</p>
+            <div class="config-row">
+              <button class="btn btn-primary" id="exportCsvBtn" data-i18n="exportCsvNow">Exportar CSV ahora</button>
+              <button class="btn" id="importCsvBtn" data-i18n="importCsv">Importar CSV</button>
+              <input type="file" id="fileImportInput" accept=".csv">
+            </div>
+            <div class="status-line">
+              <span class="status-dot" id="lastSaveDot"></span>
+              <span id="lastSaveText">—</span>
+            </div>
+          </div>
+
+          <div class="config-card">
+            <h3 data-i18n="resetDbTitle">Restaurar base de datos</h3>
+            <p class="config-desc" data-i18n="resetDbDesc">Elimina todos los candidatos, reclutadores y clientes para empezar de cero. Esta acción no se puede deshacer.</p>
+            <div class="config-row">
+              <button class="btn btn-danger" id="resetDbBtn" data-i18n="resetDbBtn">Restaurar base de datos</button>
+            </div>
+          </div>
+
+          <div class="config-card">
+            <h3 data-i18n="alertsConfigTitle">Umbrales de alerta</h3>
+            <p class="config-desc" data-i18n="alertsConfigDesc">Definí cuándo un candidato se marca como atrasado en el dashboard.</p>
+            <div class="config-row">
+              <label data-i18n="staleContactLabel">Sin contacto hace más de (días)</label>
+              <input type="number" id="staleContactDays" min="1" max="365" value="14">
+            </div>
+            <div class="config-row">
+              <label data-i18n="staleStageLabel">En la misma etapa hace más de (días)</label>
+              <input type="number" id="staleStageDays" min="1" max="365" value="21">
+            </div>
+          </div>
+
+          <div class="config-card">
+            <h3 data-i18n="manageRecruitersTitle">Reclutadores/as</h3>
+            <p class="config-desc" data-i18n="manageRecruitersDesc">Lista de reclutadores/as disponible al asignar candidatos.</p>
+            <div class="manage-list" id="recruitersList"></div>
+            <div class="manage-add">
+              <input type="text" id="newRecruiterInput" data-i18n-ph="phNewRecruiter" placeholder="Nombre del/la nuevo/a reclutador/a">
+              <button class="btn btn-primary" id="addRecruiterBtn" data-i18n="addBtn">Agregar</button>
+            </div>
+          </div>
+
+          <div class="config-card">
+            <h3 data-i18n="manageClientsTitle">Clientes</h3>
+            <p class="config-desc" data-i18n="manageClientsDesc">Empresas que solicitan búsquedas, disponibles al asignar candidatos.</p>
+            <div class="manage-list" id="clientsList"></div>
+            <div class="manage-add">
+              <input type="text" id="newClientInput" data-i18n-ph="phNewClient" placeholder="Nombre de la empresa cliente">
+              <button class="btn btn-primary" id="addClientBtn" data-i18n="addBtn">Agregar</button>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </div>
+    <footer class="app-footer">
+      <span class="footer-credit">Lautaro Benitez · 2026</span>
+      <span class="footer-version" id="appFooterVersion"></span>
+    </footer>
+  </div>
+</div>
+
+<!-- ===================== MODAL CANDIDATO ===================== -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modalTitle" data-i18n="newCandidateTitle">Nuevo candidato</h3>
+      <button class="btn-x" id="modalCloseBtn" title="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <form id="candidateForm">
+        <div class="form-grid">
+
+          <fieldset class="section"><legend data-i18n="sectionPersonal">Datos personales</legend></fieldset>
+          <div class="field"><label data-i18n="lblFirstName">Nombre *</label><input type="text" id="f-firstName" required></div>
+          <div class="field"><label data-i18n="lblLastName">Apellido *</label><input type="text" id="f-lastName" required></div>
+          <div class="field"><label data-i18n="lblJobTitle">Título profesional</label><input type="text" id="f-jobTitle" data-i18n-ph="phJobTitle" placeholder="ej. Analista de Finanzas Senior"></div>
+          <div class="field"><label data-i18n="lblEmail">Mail</label><input type="email" id="f-email"></div>
+          <div class="field"><label data-i18n="lblPhone">Celular</label><input type="text" id="f-phone"></div>
+          <div class="field"><label data-i18n="lblLocation">Ubicación</label><input type="text" id="f-location"></div>
+          <div class="field"><label data-i18n="lblUniversity">Universidad</label><input type="text" id="f-university"></div>
+          <div class="field"><label data-i18n="lblEnglishLevel">Nivel de inglés</label>
+            <select id="f-englishLevel">
+              <option value="" data-i18n="optNone">—</option>
+              <option value="Basic" data-i18n="optBasic">Basic</option>
+              <option value="Intermediate" data-i18n="optIntermediate">Intermediate</option>
+              <option value="Upper Intermediate" data-i18n="optUpperIntermediate">Upper Intermediate</option>
+              <option value="Advanced" data-i18n="optAdvanced">Advanced</option>
+              <option value="Fluent" data-i18n="optFluent">Fluent</option>
+              <option value="Native" data-i18n="optNative">Native</option>
+            </select>
+          </div>
+
+          <fieldset class="section"><legend data-i18n="sectionProfile">Perfil profesional</legend></fieldset>
+          <div class="field"><label data-i18n="lblPosition">Posición</label><input type="text" id="f-position"></div>
+          <div class="field"><label data-i18n="lblTeam">Equipo</label><input type="text" id="f-team"></div>
+          <div class="field"><label data-i18n="lblSeniority">Seniority</label>
+            <select id="f-seniority">
+              <option value="" data-i18n="optNone">—</option>
+              <option value="Semi Senior">Semi Senior</option>
+              <option value="Senior">Senior</option>
+              <option value="Lead">Lead</option>
+              <option value="Manager">Manager</option>
+              <option value="Director">Director</option>
+            </select>
+          </div>
+          <div class="field"><label data-i18n="lblExperience">Años de experiencia</label><input type="number" step="0.5" id="f-experience"></div>
+          <div class="field"><label data-i18n="lblCurrentCompany">Empresa actual</label><input type="text" id="f-currentCompany"></div>
+          <div class="field"><label data-i18n="lblAvailability">Disponibilidad</label><input type="text" id="f-availability" data-i18n-ph="phAvailability" placeholder="ej. 30 días"></div>
+
+          <fieldset class="section"><legend data-i18n="sectionConditions">Condiciones</legend></fieldset>
+          <div class="field"><label data-i18n="lblSalaryExpectation">Pretensión salarial</label><input type="number" step="1" id="f-salaryExpectation"></div>
+          <div class="field"><label data-i18n="lblCurrency">Moneda</label>
+            <select id="f-currency">
+              <option value="" data-i18n="optNone">—</option>
+              <option>USD</option><option>ARS</option><option>CLP</option><option>EUR</option>
+            </select>
+          </div>
+          <div class="field"><label data-i18n="lblSource">Fuente</label><input type="text" id="f-source" data-i18n-ph="phSource" placeholder="ej. LinkedIn Recruiter"></div>
+
+          <div class="field-with-manage">
+            <div class="field">
+              <label data-i18n="lblRecruiter">Reclutador/a</label>
+              <select id="f-recruiter"><option value="" data-i18n="optNone">—</option></select>
+            </div>
+            <button type="button" class="icon-btn" id="goToConfigFromRecruiter" title="Gestionar reclutadores/as"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+          </div>
+
+          <fieldset class="section"><legend data-i18n="sectionClient">Cliente</legend></fieldset>
+          <div class="field-with-manage full">
+            <div class="field">
+              <label data-i18n="lblClient">Cliente (empresa que solicita la búsqueda)</label>
+              <select id="f-client"><option value="" data-i18n="optNone">—</option></select>
+            </div>
+            <button type="button" class="icon-btn" id="goToConfigFromClient" title="Gestionar clientes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+          </div>
+
+          <fieldset class="section"><legend data-i18n="sectionStatus">Estado del proceso</legend></fieldset>
+          <div class="field full">
+            <label data-i18n="lblCurrentStatusStage">Estado y etapa actuales (calculado)</label>
+            <div class="current-status-row" id="currentStatusStageDisplay"></div>
+          </div>
+          <div class="field full history-block">
+            <label data-i18n="lblStatusHistory">Historial del proceso</label>
+            <div class="history-list" id="statusHistoryList"></div>
+            <div class="history-add-row">
+              <input type="date" id="historyNewDate">
+              <select id="historyNewStatus">
+                <option value="" data-i18n="optNone">—</option>
+                <option value="In Progress" data-i18n="statInProgress">In Progress</option>
+                <option value="On Hold" data-i18n="statOnHold">On Hold</option>
+                <option value="Rejected" data-i18n="statRejected">Rejected</option>
+                <option value="Withdrawn" data-i18n="statWithdrawn">Withdrawn</option>
+                <option value="Hired" data-i18n="statHired">Hired</option>
+              </select>
+              <select id="historyNewStage">
+                <option value="" data-i18n="optNone">—</option>
+                <option value="Sourced" data-i18n="stgSourced">Sourced</option>
+                <option value="Contacted" data-i18n="stgContacted">Contacted</option>
+                <option value="Screening" data-i18n="stgScreening">Screening</option>
+                <option value="Recruiter Interview" data-i18n="stgRecruiterInterview">Recruiter Interview</option>
+                <option value="Client Interview 1" data-i18n="stgClientInterview1">Client Interview 1</option>
+                <option value="Client Interview 2" data-i18n="stgClientInterview2">Client Interview 2</option>
+                <option value="Final Interview" data-i18n="stgFinalInterview">Final Interview</option>
+                <option value="Offer" data-i18n="stgOffer">Offer</option>
+                <option value="Offer Accepted" data-i18n="stgOfferAccepted">Offer Accepted</option>
+                <option value="Offer Rejected" data-i18n="stgOfferRejected">Offer Rejected</option>
+                <option value="Hired" data-i18n="stgHired">Hired</option>
+                <option value="Rejected" data-i18n="stgRejected">Rejected</option>
+              </select>
+              <input type="text" id="historyNewNote" data-i18n-ph="phHistoryNote" placeholder="Nota (opcional)">
+              <button type="button" class="btn btn-primary btn-sm" id="addHistoryEventBtn" data-i18n="addEventBtn">+ Agregar</button>
+            </div>
+          </div>
+          <div class="field"><label data-i18n="lblOutcome">Resultado</label>
+            <select id="f-outcome">
+              <option value="" data-i18n="optNone">—</option>
+              <option value="In Process" data-i18n="outInProcess">In Process</option>
+              <option value="Rejected by Recruiter" data-i18n="outRejectedByRecruiter">Rejected by Recruiter</option>
+              <option value="Rejected by Client" data-i18n="outRejectedByClient">Rejected by Client</option>
+              <option value="Candidate Declined" data-i18n="outCandidateDeclined">Candidate Declined</option>
+              <option value="Offer Accepted" data-i18n="outOfferAccepted">Offer Accepted</option>
+              <option value="Offer Rejected" data-i18n="outOfferRejected">Offer Rejected</option>
+              <option value="Hired" data-i18n="outHired">Hired</option>
+            </select>
+          </div>
+          <div class="field"><label data-i18n="lblClientFeedback">Feedback del cliente</label><input type="text" id="f-clientFeedback"></div>
+
+          <fieldset class="section"><legend data-i18n="sectionDates">Fechas</legend></fieldset>
+          <div class="field"><label data-i18n="lblInterviewDate">Fecha de entrevista</label><input type="date" id="f-interviewDate"></div>
+          <div class="field"><label data-i18n="lblLastContact">Último contacto</label><input type="date" id="f-lastContact"></div>
+          <div class="field"><label data-i18n="lblNextFollowUp">Próximo seguimiento</label><input type="date" id="f-nextFollowUp"></div>
+          <div class="field"><label data-i18n="lblClientSubmissionDate">Envío a cliente</label><input type="date" id="f-clientSubmissionDate"></div>
+
+          <fieldset class="section"><legend data-i18n="sectionNotes">Notas</legend></fieldset>
+          <div class="field full"><label data-i18n="lblNotes">Notas</label><textarea id="f-notes"></textarea></div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-danger" id="deleteBtn" style="display:none;" data-i18n="deleteCandidateBtn">Eliminar candidato</button>
+      <div style="display:flex;gap:10px;margin-left:auto;">
+        <button class="btn" id="cancelBtn" data-i18n="cancelBtn">Cancelar</button>
+        <button class="btn btn-primary" id="saveBtn" data-i18n="saveBtn">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+
+  // ======================================================================
+  // I18N
+  // ======================================================================
+  const I18N = {
+    es: {
+      appTitle:"Pipeline de Reclutamiento",
+      appSubtitle:"Base de candidatos y métricas de selección",
+      navDashboard:"Dashboard", navDatabase:"Base de Datos", navConfig:"Configuración",
+      sidebarFoot:"Los datos se guardan en este navegador.",
+      collapseNav:"Colapsar", expandNav:"Expandir menú",
+      dashSubtitle:"Métricas del pipeline en base a los filtros seleccionados",
+      dbSubtitle:"Todos los candidatos del pipeline, filtrables y exportables",
+      configSubtitle:"Respaldo de datos, alertas y listas maestras",
+      filtersLabel:"Filtros:", allPositions:"Posición: todas", allRecruiters:"Reclutador/a: todos",
+      allClients:"Cliente: todos", allStatuses:"Estado: todos", allStages:"Etapa: todas",
+      dateFromLabel:"Desde", dateToLabel:"Hasta", clearFilters:"Limpiar filtros",
+      trendTitle:"Tendencia mensual", alertsTitle:"Alertas",
+      funnelTitle:"Embudo de selección", statusTitle:"Estado actual",
+      byPositionTitle:"Candidatos por posición", byRecruiterTitle:"Candidatos por reclutador/a",
+      byClientTitle:"Candidatos por cliente", outcomeTitle:"Resultado de procesos cerrados",
+      followupTitle:"Seguimientos pendientes",
+      colCandidate:"Candidato", colNextFollowUp:"Próximo seguimiento", colStatus:"Estado",
+      searchPlaceholder:"Buscar por nombre, empresa, universidad, notas...",
+      newCandidateBtn:"+ Nuevo candidato",
+      colFirstName:"Nombre", colLastName:"Apellido", colJobTitle:"Título profesional",
+      colEmail:"Mail", colPhone:"Celular", colPosition:"Posición",
+      colClient:"Cliente", colTeam:"Equipo", colSeniority:"Seniority", colLocation:"Ubicación",
+      colUniversity:"Universidad", colExperience:"Años exp.", colCurrentCompany:"Empresa actual",
+      colSalaryExpectation:"Pretensión salarial", colCurrency:"Moneda", colAvailability:"Disponibilidad",
+      colSource:"Fuente", colRecruiter:"Reclutador/a", colStage:"Etapa", colOutcome:"Resultado",
+      colEnglishLevel:"Nivel inglés", colInterviewDate:"Fecha entrevista", colLastContact:"Último contacto",
+      colClientSubmissionDate:"Envío a cliente", colClientFeedback:"Feedback cliente", colNotes:"Notas",
+      colActions:"Acciones", rowHint:"Clic en una fila para editar el registro completo",
+      newCandidateTitle:"Nuevo candidato", editCandidateTitle:"Editar candidato",
+      sectionPersonal:"Datos personales", lblFirstName:"Nombre *", lblLastName:"Apellido *",
+      lblJobTitle:"Título profesional", phJobTitle:"ej. Analista de Finanzas Senior",
+      lblEmail:"Mail", lblPhone:"Celular",
+      lblLocation:"Ubicación", lblUniversity:"Universidad", lblEnglishLevel:"Nivel de inglés",
+      sectionProfile:"Perfil profesional", lblPosition:"Posición", lblTeam:"Equipo", lblSeniority:"Seniority",
+      lblExperience:"Años de experiencia", lblCurrentCompany:"Empresa actual", lblAvailability:"Disponibilidad",
+      phAvailability:"ej. 30 días",
+      sectionConditions:"Condiciones", lblSalaryExpectation:"Pretensión salarial", lblCurrency:"Moneda",
+      lblSource:"Fuente", phSource:"ej. LinkedIn Recruiter", lblRecruiter:"Reclutador/a",
+      sectionClient:"Cliente", lblClient:"Cliente (empresa que solicita la búsqueda)",
+      sectionStatus:"Estado del proceso", lblStatus:"Estado", lblStage:"Etapa", lblOutcome:"Resultado",
+      lblCurrentStatusStage:"Estado y etapa actuales (calculado)", lblStatusHistory:"Historial del proceso",
+      phHistoryNote:"Nota (opcional)", addEventBtn:"+ Agregar",
+      noHistoryYet:"Todavía no hay eventos en el historial.",
+      historyMinOneEvent:"El candidato debe tener al menos un evento en el historial.",
+      deleteHistoryEventConfirm:"¿Eliminar este evento del historial?",
+      historyNeedsStatusOrStage:"Elegí un estado o una etapa para el nuevo evento.",
+      lblClientFeedback:"Feedback del cliente",
+      sectionDates:"Fechas", lblInterviewDate:"Fecha de entrevista", lblLastContact:"Último contacto",
+      lblNextFollowUp:"Próximo seguimiento", lblClientSubmissionDate:"Envío a cliente",
+      sectionNotes:"Notas", lblNotes:"Notas",
+      deleteCandidateBtn:"Eliminar candidato", cancelBtn:"Cancelar", saveBtn:"Guardar",
+      optNone:"—",
+      optBasic:"Basic", optIntermediate:"Intermediate", optUpperIntermediate:"Upper Intermediate",
+      optAdvanced:"Advanced", optFluent:"Fluent", optNative:"Native",
+      statInProgress:"En proceso", statOnHold:"En espera", statRejected:"Rechazado", statWithdrawn:"Retirado", statHired:"Contratado",
+      stgSourced:"Sourcing", stgContacted:"Contactado", stgScreening:"Screening",
+      stgRecruiterInterview:"Entrevista reclutador/a", stgClientInterview1:"Entrevista cliente 1",
+      stgClientInterview2:"Entrevista cliente 2", stgFinalInterview:"Entrevista final",
+      stgOffer:"Oferta", stgOfferAccepted:"Oferta aceptada", stgOfferRejected:"Oferta rechazada",
+      stgHired:"Contratado", stgRejected:"Rechazado",
+      outInProcess:"En proceso", outRejectedByRecruiter:"Rechazado por reclutador/a",
+      outRejectedByClient:"Rechazado por cliente", outCandidateDeclined:"Candidato/a declinó",
+      outOfferAccepted:"Oferta aceptada", outOfferRejected:"Oferta rechazada", outHired:"Contratado",
+      manageRecruitersTitle:"Reclutadores/as", manageClientsTitle:"Clientes",
+      manageRecruitersDesc:"Lista de reclutadores/as disponible al asignar candidatos.",
+      manageClientsDesc:"Empresas que solicitan búsquedas, disponibles al asignar candidatos.",
+      phNewRecruiter:"Nombre del/la nuevo/a reclutador/a", phNewClient:"Nombre de la empresa cliente",
+      addBtn:"Agregar", deleteConfirm:"¿Eliminar este candidato del pipeline? Esta acción no se puede deshacer.",
+      nameRequired:"El nombre y el apellido son obligatorios.", noResults:"Sin resultados",
+      noResultsSub:"Probá ajustar los filtros o la búsqueda.", noDataYet:"Todavía no hay datos suficientes.",
+      noFollowups:"No hay seguimientos programados.", overdue:"(vencido)",
+      resultsCount:(n,t)=>`${n} de ${t} candidatos`, candidatesInPipeline:"en la base",
+      activeToday:"activos hoy", ofTotal:(p)=>`${p}% del total`, onHoldSub:"on hold",
+      discardedSub:"descartados", declinedSub:"declinaron",
+      kpiTotal:"Total candidatos", kpiActive:"En proceso", kpiHired:"Contratados",
+      kpiOnHold:"En espera", kpiRejected:"Rechazados", kpiWithdrawn:"Retirados",
+      candidatesFunnel:(n)=>`${n} candidatos`, manageRecruitersInUse:(n)=>`${n} en uso`,
+      deleteInUseWarning:"Este reclutador/a tiene candidatos asignados. ¿Eliminar igual? Los registros quedarán sin reclutador/a asignado.",
+      deleteClientInUseWarning:"Este cliente tiene candidatos asignados. ¿Eliminar igual? Los registros quedarán sin cliente asignado.",
+      noDataLabel:"— sin dato —",
+      backupTitle:"Respaldo automático (CSV)",
+      backupDesc:"Descarga periódica de un CSV con todos los candidatos. El archivo se guarda en la carpeta de Descargas de tu navegador — si esa carpeta está sincronizada con Google Drive, el respaldo queda disponible ahí también.",
+      backupEnableLabel:"Activar respaldo automático", backupIntervalLabel:"Intervalo (minutos)",
+      backupStatusOff:"Respaldo automático desactivado",
+      backupStatusOn:(min)=>`Activo — próxima descarga en hasta ${min} min`,
+      lastBackup:(time)=>`Último respaldo descargado: ${time}`, neverBackedUp:"Todavía no se descargó ningún respaldo",
+      manualBackupTitle:"Exportar / Importar manual",
+      manualBackupDesc:"Descargá un CSV en cualquier momento, o restaurá el pipeline desde un archivo exportado previamente.",
+      exportCsvNow:"Exportar CSV ahora", importCsv:"Importar CSV",
+      lastSavedLocal:(time)=>`Guardado en este navegador: ${time}`, savingLocal:"Guardando en este navegador…",
+      importSuccess:(n)=>`Se importaron ${n} candidatos.`, importError:"No se pudo leer el archivo CSV.",
+      importConfirm:"Importar agregará los candidatos del archivo a la base actual. ¿Continuar?",
+      resetDbTitle:"Restaurar base de datos", resetDbBtn:"Restaurar base de datos",
+      resetDbDesc:"Elimina todos los candidatos, reclutadores y clientes para empezar de cero. Esta acción no se puede deshacer.",
+      resetDbConfirm:"¿Seguro que querés borrar TODA la base de datos (candidatos, reclutadores y clientes)? Esta acción no se puede deshacer.",
+      alertsConfigTitle:"Umbrales de alerta", alertsConfigDesc:"Definí cuándo un candidato se marca como atrasado en el dashboard.",
+      staleContactLabel:"Sin contacto hace más de (días)", staleStageLabel:"En la misma etapa hace más de (días)",
+      noAlerts:"No hay candidatos con alertas activas.",
+      alertOverdueFollowup:(days)=>`Seguimiento vencido hace ${days} días`,
+      alertStaleContact:(days)=>`Sin contacto desde hace ${days} días`,
+      alertStaleStage:(days)=>`En "${'%STAGE%'}" desde hace ${days} días`,
+      exportCsv:"Exportar CSV",
+    },
+    en: {
+      appTitle:"Recruitment Pipeline",
+      appSubtitle:"Candidate database and recruitment metrics",
+      navDashboard:"Dashboard", navDatabase:"Database", navConfig:"Settings",
+      sidebarFoot:"Data is saved in this browser.",
+      collapseNav:"Collapse", expandNav:"Expand menu",
+      dashSubtitle:"Pipeline metrics based on the selected filters",
+      dbSubtitle:"All candidates in the pipeline, filterable and exportable",
+      configSubtitle:"Data backup, alerts and master lists",
+      filtersLabel:"Filters:", allPositions:"Position: all", allRecruiters:"Recruiter: all",
+      allClients:"Client: all", allStatuses:"Status: all", allStages:"Stage: all",
+      dateFromLabel:"From", dateToLabel:"To", clearFilters:"Clear filters",
+      trendTitle:"Monthly trend", alertsTitle:"Alerts",
+      funnelTitle:"Hiring funnel", statusTitle:"Current status",
+      byPositionTitle:"Candidates by position", byRecruiterTitle:"Candidates by recruiter",
+      byClientTitle:"Candidates by client", outcomeTitle:"Closed process outcomes",
+      followupTitle:"Pending follow-ups",
+      colCandidate:"Candidate", colNextFollowUp:"Next follow-up", colStatus:"Status",
+      searchPlaceholder:"Search by name, company, university, notes...",
+      newCandidateBtn:"+ New candidate",
+      colFirstName:"First name", colLastName:"Last name", colJobTitle:"Job title",
+      colEmail:"Email", colPhone:"Cellphone", colPosition:"Position",
+      colClient:"Client", colTeam:"Team", colSeniority:"Seniority", colLocation:"Location",
+      colUniversity:"University", colExperience:"Years exp.", colCurrentCompany:"Current company",
+      colSalaryExpectation:"Salary expectation", colCurrency:"Currency", colAvailability:"Availability",
+      colSource:"Source", colRecruiter:"Recruiter", colStage:"Stage", colOutcome:"Outcome",
+      colEnglishLevel:"English level", colInterviewDate:"Interview date", colLastContact:"Last contact",
+      colClientSubmissionDate:"Client submission", colClientFeedback:"Client feedback", colNotes:"Notes",
+      colActions:"Actions", rowHint:"Click a row to edit the full record",
+      newCandidateTitle:"New candidate", editCandidateTitle:"Edit candidate",
+      sectionPersonal:"Personal information", lblFirstName:"First name *", lblLastName:"Last name *",
+      lblJobTitle:"Job title", phJobTitle:"e.g. Senior Financial Analyst",
+      lblEmail:"Email", lblPhone:"Cellphone",
+      lblLocation:"Location", lblUniversity:"University", lblEnglishLevel:"English level",
+      sectionProfile:"Professional profile", lblPosition:"Position", lblTeam:"Team", lblSeniority:"Seniority",
+      lblExperience:"Years of experience", lblCurrentCompany:"Current company", lblAvailability:"Availability",
+      phAvailability:"e.g. 30 days",
+      sectionConditions:"Conditions", lblSalaryExpectation:"Salary expectation", lblCurrency:"Currency",
+      lblSource:"Source", phSource:"e.g. LinkedIn Recruiter", lblRecruiter:"Recruiter",
+      sectionClient:"Client", lblClient:"Client (company requesting the search)",
+      sectionStatus:"Process status", lblStatus:"Status", lblStage:"Stage", lblOutcome:"Outcome",
+      lblCurrentStatusStage:"Current status and stage (calculated)", lblStatusHistory:"Process history",
+      phHistoryNote:"Note (optional)", addEventBtn:"+ Add",
+      noHistoryYet:"No history events yet.",
+      historyMinOneEvent:"The candidate must keep at least one history event.",
+      deleteHistoryEventConfirm:"Delete this history event?",
+      historyNeedsStatusOrStage:"Pick a status or a stage for the new event.",
+      lblClientFeedback:"Client feedback",
+      sectionDates:"Dates", lblInterviewDate:"Interview date", lblLastContact:"Last contact",
+      lblNextFollowUp:"Next follow-up", lblClientSubmissionDate:"Client submission date",
+      sectionNotes:"Notes", lblNotes:"Notes",
+      deleteCandidateBtn:"Delete candidate", cancelBtn:"Cancel", saveBtn:"Save",
+      optNone:"—",
+      optBasic:"Basic", optIntermediate:"Intermediate", optUpperIntermediate:"Upper Intermediate",
+      optAdvanced:"Advanced", optFluent:"Fluent", optNative:"Native",
+      statInProgress:"In Progress", statOnHold:"On Hold", statRejected:"Rejected", statWithdrawn:"Withdrawn", statHired:"Hired",
+      stgSourced:"Sourced", stgContacted:"Contacted", stgScreening:"Screening",
+      stgRecruiterInterview:"Recruiter Interview", stgClientInterview1:"Client Interview 1",
+      stgClientInterview2:"Client Interview 2", stgFinalInterview:"Final Interview",
+      stgOffer:"Offer", stgOfferAccepted:"Offer Accepted", stgOfferRejected:"Offer Rejected",
+      stgHired:"Hired", stgRejected:"Rejected",
+      outInProcess:"In Process", outRejectedByRecruiter:"Rejected by Recruiter",
+      outRejectedByClient:"Rejected by Client", outCandidateDeclined:"Candidate Declined",
+      outOfferAccepted:"Offer Accepted", outOfferRejected:"Offer Rejected", outHired:"Hired",
+      manageRecruitersTitle:"Recruiters", manageClientsTitle:"Clients",
+      manageRecruitersDesc:"List of recruiters available when assigning candidates.",
+      manageClientsDesc:"Companies requesting searches, available when assigning candidates.",
+      phNewRecruiter:"New recruiter's name", phNewClient:"Client company name",
+      addBtn:"Add", deleteConfirm:"Delete this candidate from the pipeline? This action cannot be undone.",
+      nameRequired:"First name and last name are required.", noResults:"No results",
+      noResultsSub:"Try adjusting the filters or search.", noDataYet:"Not enough data yet.",
+      noFollowups:"No follow-ups scheduled.", overdue:"(overdue)",
+      resultsCount:(n,t)=>`${n} of ${t} candidates`, candidatesInPipeline:"in the database",
+      activeToday:"active today", ofTotal:(p)=>`${p}% of total`, onHoldSub:"on hold",
+      discardedSub:"discarded", declinedSub:"declined",
+      kpiTotal:"Total candidates", kpiActive:"In progress", kpiHired:"Hired",
+      kpiOnHold:"On hold", kpiRejected:"Rejected", kpiWithdrawn:"Withdrawn",
+      candidatesFunnel:(n)=>`${n} candidates`, manageRecruitersInUse:(n)=>`${n} in use`,
+      deleteInUseWarning:"This recruiter has candidates assigned. Delete anyway? Those records will be left without a recruiter.",
+      deleteClientInUseWarning:"This client has candidates assigned. Delete anyway? Those records will be left without a client.",
+      noDataLabel:"— no data —",
+      backupTitle:"Automatic backup (CSV)",
+      backupDesc:"Periodic download of a CSV with all candidates. The file is saved to your browser's Downloads folder — if that folder is synced with Google Drive, the backup will also be available there.",
+      backupEnableLabel:"Enable automatic backup", backupIntervalLabel:"Interval (minutes)",
+      backupStatusOff:"Automatic backup disabled",
+      backupStatusOn:(min)=>`Active — next download within ${min} min`,
+      lastBackup:(time)=>`Last backup downloaded: ${time}`, neverBackedUp:"No backup downloaded yet",
+      manualBackupTitle:"Manual export / import",
+      manualBackupDesc:"Download a CSV at any time, or restore the pipeline from a previously exported file.",
+      exportCsvNow:"Export CSV now", importCsv:"Import CSV",
+      lastSavedLocal:(time)=>`Saved in this browser: ${time}`, savingLocal:"Saving in this browser…",
+      importSuccess:(n)=>`${n} candidates imported.`, importError:"Could not read the CSV file.",
+      importConfirm:"Importing will add the candidates from the file to the current database. Continue?",
+      resetDbTitle:"Reset database", resetDbBtn:"Reset database",
+      resetDbDesc:"Deletes all candidates, recruiters and clients to start fresh. This action cannot be undone.",
+      resetDbConfirm:"Are you sure you want to delete the ENTIRE database (candidates, recruiters and clients)? This action cannot be undone.",
+      alertsConfigTitle:"Alert thresholds", alertsConfigDesc:"Define when a candidate is flagged as overdue on the dashboard.",
+      staleContactLabel:"No contact for more than (days)", staleStageLabel:"Same stage for more than (days)",
+      noAlerts:"No candidates with active alerts.",
+      alertOverdueFollowup:(days)=>`Follow-up overdue by ${days} days`,
+      alertStaleContact:(days)=>`No contact for ${days} days`,
+      alertStaleStage:(days)=>`In "${'%STAGE%'}" for ${days} days`,
+      exportCsv:"Export CSV",
+    }
+  };
+
+  let currentLang = 'en';
+  function t(key, ...args){
+    const dict = I18N[currentLang];
+    const v = dict[key];
+    if(typeof v === 'function') return v(...args);
+    return v !== undefined ? v : key;
+  }
+
+  function applyStaticTranslations(){
+    document.querySelectorAll('[data-i18n]').forEach(el=>{
+      const key = el.dataset.i18n;
+      const val = t(key);
+      if(typeof val === 'string') el.textContent = val;
+    });
+    document.querySelectorAll('[data-i18n-ph]').forEach(el=>{
+      const key = el.dataset.i18nPh;
+      const val = t(key);
+      if(typeof val === 'string') el.placeholder = val;
+    });
+    document.documentElement.lang = currentLang;
+    if(sidebarEl && sidebarEl.classList.contains('collapsed')){
+      document.querySelectorAll('.nav-btn[data-i18n-title]').forEach(btn=>{
+        btn.title = t(btn.dataset.i18nTitle);
+      });
+      sidebarCollapseBtn.title = t('expandNav');
+    }
+  }
+
+  document.querySelectorAll('.lang-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      currentLang = btn.dataset.lang;
+      document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active', b===btn));
+      applyStaticTranslations();
+      renderAll();
+    });
+  });
+
+  // ======================================================================
+  // DATA / CONSTANTS
+  // ----------------------------------------------------------------------
+  // Estado, Etapa y Resultado comparten la misma forma: una lista de
+  // pares [valor crudo, clave de traducción]. En vez de tener 3 listas
+  // sueltas más 3 funciones de etiqueta casi idénticas, se modelan una
+  // sola vez con createLookup() y se instancian para cada caso.
+  // ======================================================================
+  function createLookup(pairs){
+    return {
+      pairs,
+      label(raw){
+        const found = pairs.find(([r])=>r===raw);
+        return found ? t(found[1]) : raw;
+      },
+      usedBy(list, getField){
+        return pairs.filter(([raw])=>list.some(item=>getField(item)===raw));
+      }
+    };
+  }
+
+  const Lookups = {
+    status: createLookup([
+      ["In Progress","statInProgress"],["On Hold","statOnHold"],["Rejected","statRejected"],
+      ["Withdrawn","statWithdrawn"],["Hired","statHired"]
+    ]),
+    stage: createLookup([
+      ["Sourced","stgSourced"],["Contacted","stgContacted"],["Screening","stgScreening"],
+      ["Recruiter Interview","stgRecruiterInterview"],["Client Interview 1","stgClientInterview1"],
+      ["Client Interview 2","stgClientInterview2"],["Final Interview","stgFinalInterview"],
+      ["Offer","stgOffer"],["Offer Accepted","stgOfferAccepted"],["Offer Rejected","stgOfferRejected"],
+      ["Hired","stgHired"],["Rejected","stgRejected"]
+    ]),
+    outcome: createLookup([
+      ["In Process","outInProcess"],["Rejected by Recruiter","outRejectedByRecruiter"],
+      ["Rejected by Client","outRejectedByClient"],["Candidate Declined","outCandidateDeclined"],
+      ["Offer Accepted","outOfferAccepted"],["Offer Rejected","outOfferRejected"],["Hired","outHired"]
+    ])
+  };
+
+  // Alias retrocompatibles (mismo array [raw,key] que antes, por si se
+  // itera directamente sobre la lista en otras partes del archivo).
+  const STATUS_KEYS = Lookups.status.pairs;
+  const STAGE_KEYS = Lookups.stage.pairs;
+  const OUTCOME_KEYS = Lookups.outcome.pairs;
+
+  const STATUS_BADGE_CLASS = {
+    "In Progress":"badge-progress","On Hold":"badge-hold","Rejected":"badge-rejected",
+    "Withdrawn":"badge-withdrawn","Hired":"badge-hired"
+  };
+
+  const FIELDS = ["firstName","lastName","jobTitle","email","phone","position","client","team","seniority","location","university",
+    "experience","currentCompany","salaryExpectation","currency","availability","source","recruiter",
+    "outcome","englishLevel","interviewDate","lastContact","nextFollowUp",
+    "clientSubmissionDate","clientFeedback","notes"];
+
+  const CSV_HEADERS = ["First Name","Last Name","Job Title","Mail","Cellphone","Position","Client","Team","Seniority","Location","University",
+      "Years of Experience","Current Company","Salary Expectation","Currency","Availability","Source","Recruiter",
+      "Status","Stage","Outcome","English Level","Interview Date","Last Contact","Next Follow-Up",
+      "Client Submission Date","Client Feedback","Notes"];
+
+  // CSV_FIELDS está alineado 1:1 con CSV_HEADERS. Incluye "status" y
+  // "stage" aunque ya no sean inputs directos del formulario (ahora se
+  // calculan desde el historial), para que el CSV exportado siga
+  // teniendo esas columnas y los archivos viejos se puedan reimportar.
+  const CSV_FIELDS = ["firstName","lastName","jobTitle","email","phone","position","client","team","seniority","location","university",
+    "experience","currentCompany","salaryExpectation","currency","availability","source","recruiter",
+    "status","stage","outcome","englishLevel","interviewDate","lastContact","nextFollowUp",
+    "clientSubmissionDate","clientFeedback","notes"];
+
+  // Versión del sistema — debe coincidir con CHANGELOG.md / README.md
+  const APP_VERSION = '1.2.1';
+
+  function cryptoId(){ return 'c'+Math.random().toString(36).slice(2,10)+Date.now().toString(36); }
+
+  // ----------------------------------------------------------------------
+  // Historial de Estado/Etapa
+  // ----------------------------------------------------------------------
+  // En vez de que "Estado" y "Etapa" sean campos sueltos que se
+  // sobreescriben al editar, cada candidato guarda un historial de
+  // eventos (fecha + estado + etapa + nota). El estado/etapa "actuales"
+  // que se ven en tabla, dashboard y alertas son siempre el evento más
+  // reciente del historial — nunca se editan a mano por separado, así
+  // no hay forma de que queden desincronizados.
+  function makeHistoryEvent(date, status, stage, note){
+    return {id:cryptoId(), date: date || todayISO(), status: status || '', stage: stage || '', note: note || ''};
+  }
+
+  function sortedHistory(candidate){
+    const history = candidate.statusHistory || [];
+    // Orden cronológico ascendente; si la fecha es igual, respeta el orden de inserción.
+    return history.slice().sort((a,b)=> (a.date||'').localeCompare(b.date||''));
+  }
+
+  function recomputeCurrentStatusStage(candidate){
+    const history = sortedHistory(candidate);
+    if(history.length===0){
+      candidate.status = candidate.status || '';
+      candidate.stage = candidate.stage || '';
+      return;
+    }
+    const latest = history[history.length-1];
+    candidate.status = latest.status || '';
+    candidate.stage = latest.stage || '';
+    candidate.stageChangedAt = latest.date || todayISO();
+  }
+
+  let recruiters = [];
+  let clients = [];
+  let candidates = [];
+  candidates.forEach(recomputeCurrentStatusStage);
+
+
+  let settings = {
+    autoBackupEnabled:false,
+    autoBackupIntervalMin:30,
+    staleContactDays:14,
+    staleStageDays:21,
+    lastBackupAt:null
+  };
+
+  let editingId = null;
+  let sortKey = null, sortDir = 1;
+
+  function todayISO(){ const d=new Date(); d.setHours(0,0,0,0); return d.toISOString().slice(0,10); }
+  function fullNameOf(c){
+    return [c.firstName, c.lastName].filter(Boolean).join(' ').trim();
+  }
+  function daysBetween(isoA, isoB){
+    const a = new Date(isoA), b = new Date(isoB);
+    return Math.round((b-a)/86400000);
+  }
+
+  // ======================================================================
+  // PERSISTENCE (browser-local, via window.storage)
+  // ======================================================================
+  const STORAGE_KEY = 'pipeline-data-v1';
+  let saveTimer = null;
+  let storageAvailable = (typeof window !== 'undefined' && window.storage);
+
+  function scheduleSave(){
+    if(!storageAvailable) return;
+    clearTimeout(saveTimer);
+    setSaveStatus('saving');
+    saveTimer = setTimeout(doSave, 600);
+  }
+
+  async function doSave(){
+    if(!storageAvailable) return;
+    try{
+      const payload = JSON.stringify({candidates, recruiters, clients, settings});
+      await window.storage.set(STORAGE_KEY, payload, false);
+      settings.lastLocalSaveAt = new Date().toISOString();
+      setSaveStatus('saved');
+    }catch(e){
+      console.error('Error guardando localmente', e);
+      setSaveStatus('error');
+    }
+  }
+
+  async function loadFromStorage(){
+    if(!storageAvailable){ renderAll(); return; }
+    try{
+      const result = await window.storage.get(STORAGE_KEY, false);
+      if(result && result.value){
+        const parsed = JSON.parse(result.value);
+        if(parsed.candidates && parsed.candidates.length) candidates = parsed.candidates;
+        if(parsed.recruiters) recruiters = parsed.recruiters;
+        if(parsed.clients) clients = parsed.clients;
+        if(parsed.settings) settings = {...settings, ...parsed.settings};
+      }
+    }catch(e){
+      // no hay datos guardados todavía, se usan los valores por defecto
+    }
+    applySettingsToUI();
+    setupAutoBackupTimer();
+    renderAll();
+  }
+
+  function setSaveStatus(state){
+    const dot = document.getElementById('lastSaveDot');
+    const text = document.getElementById('lastSaveText');
+    if(!dot || !text) return;
+    if(state==='saving'){
+      dot.classList.add('off');
+      text.textContent = t('savingLocal');
+    } else if(state==='saved'){
+      dot.classList.remove('off');
+      const time = new Date().toLocaleTimeString(currentLang==='es'?'es-AR':'en-US');
+      text.textContent = t('lastSavedLocal', time);
+    } else {
+      dot.classList.add('off');
+      text.textContent = '—';
+    }
+  }
+
+  // ======================================================================
+  // NAVIGATION (sidebar)
+  // ======================================================================
+  document.querySelectorAll('.nav-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('view-'+btn.dataset.view).classList.add('active');
+      if(btn.dataset.view==='dashboard') renderDashboard();
+    });
+  });
+
+  function goToConfig(){
+    document.querySelector('.nav-btn[data-view="config"]').click();
+  }
+  document.getElementById('goToConfigFromRecruiter').addEventListener('click', ()=>{ closeModal(); goToConfig(); });
+  document.getElementById('goToConfigFromClient').addEventListener('click', ()=>{ closeModal(); goToConfig(); });
+
+  // ---------- Sidebar collapse ----------
+  const SIDEBAR_COLLAPSE_KEY = 'pipeline-sidebar-collapsed';
+  const sidebarEl = document.getElementById('sidebar');
+  const sidebarCollapseBtn = document.getElementById('sidebarCollapseBtn');
+
+  function setSidebarCollapsed(collapsed){
+    sidebarEl.classList.toggle('collapsed', collapsed);
+    document.querySelectorAll('.nav-btn[data-i18n-title]').forEach(btn=>{
+      btn.title = collapsed ? t(btn.dataset.i18nTitle) : '';
+    });
+    sidebarCollapseBtn.title = collapsed ? t('expandNav') : '';
+    try{ localStorage.setItem(SIDEBAR_COLLAPSE_KEY, collapsed ? '1' : '0'); }catch(e){}
+    // El ancho disponible cambió: el gráfico de tendencia debe re-renderizarse.
+    setTimeout(()=>{
+      const dashView = document.getElementById('view-dashboard');
+      if(dashView.classList.contains('active')) renderTrendChart(getDashboardFiltered());
+    }, 200);
+  }
+
+  sidebarCollapseBtn.addEventListener('click', ()=>{
+    setSidebarCollapsed(!sidebarEl.classList.contains('collapsed'));
+  });
+
+  (function initSidebarCollapseState(){
+    let stored = '0';
+    try{ stored = localStorage.getItem(SIDEBAR_COLLAPSE_KEY) || '0'; }catch(e){}
+    setSidebarCollapsed(stored==='1');
+  })();
+
+  // ======================================================================
+  // RECRUITERS / CLIENTS MANAGEMENT (now in Config view)
+  // ----------------------------------------------------------------------
+  // Reclutadores y Clientes son dos "listas maestras" con el mismo
+  // comportamiento (agregar, listar con conteo de uso, eliminar con
+  // confirmación si está en uso, alimentar un <select>). En vez de
+  // duplicar esa lógica dos veces, se modela una sola vez con una
+  // factory y se instancia con los datos propios de cada lista.
+  // ======================================================================
+  function createListManager(config){
+    const { getItems, setItems, fieldName, listElId, inputElId, addBtnId, selectElId } = config;
+
+    function usageCount(name){
+      return candidates.filter(c=>c[fieldName]===name).length;
+    }
+
+    function render(){
+      const list = document.getElementById(listElId);
+      const items = getItems();
+      if(items.length===0){
+        list.innerHTML = `<div style="color:var(--ink-soft);font-size:13px;">${t('noDataYet')}</div>`;
+        return;
+      }
+      list.innerHTML = items.map(name=>`
+        <div class="manage-row">
+          <span>${escapeHtml(name)}</span>
+          <span class="manage-count">${t('manageRecruitersInUse', usageCount(name))}</span>
+          <button class="btn-x btn-x-sm manage-remove" data-name="${escapeHtml(name)}" title="Eliminar">${ICON_X}</button>
+        </div>
+      `).join('');
+      list.querySelectorAll('.manage-remove').forEach(btn=>{
+        btn.addEventListener('click', ()=>remove(btn.dataset.name));
+      });
+    }
+
+    function add(rawName){
+      const name = (rawName || '').trim();
+      if(!name) return;
+      const items = getItems();
+      if(!items.includes(name)) setItems([...items, name]);
+      render();
+      refreshSelect();
+      scheduleSave();
+    }
+
+    function remove(name){
+      const count = usageCount(name);
+      const warningKey = fieldName==='client' ? 'deleteClientInUseWarning' : 'deleteInUseWarning';
+      if(count>0 && !confirm(t(warningKey))) return;
+      setItems(getItems().filter(x=>x!==name));
+      candidates.forEach(c=>{ if(c[fieldName]===name) c[fieldName]=''; });
+      render();
+      refreshSelect();
+      scheduleSave();
+      renderAll();
+    }
+
+    function refreshSelect(){
+      fillPlainSelect(document.getElementById(selectElId), getItems(), t('optNone'));
+    }
+
+    const addBtn = document.getElementById(addBtnId);
+    const input = document.getElementById(inputElId);
+    addBtn.addEventListener('click', ()=>{ add(input.value); input.value=''; });
+    input.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); addBtn.click(); } });
+
+    return { render, refreshSelect, add, remove };
+  }
+
+  const recruitersManager = createListManager({
+    getItems: ()=>recruiters,
+    setItems: (v)=>{ recruiters = v; },
+    fieldName: 'recruiter',
+    listElId: 'recruitersList',
+    inputElId: 'newRecruiterInput',
+    addBtnId: 'addRecruiterBtn',
+    selectElId: 'f-recruiter'
+  });
+
+  const clientsManager = createListManager({
+    getItems: ()=>clients,
+    setItems: (v)=>{ clients = v; },
+    fieldName: 'client',
+    listElId: 'clientsList',
+    inputElId: 'newClientInput',
+    addBtnId: 'addClientBtn',
+    selectElId: 'f-client'
+  });
+
+  function renderRecruitersList(){ recruitersManager.render(); }
+  function renderClientsList(){ clientsManager.render(); }
+  function refreshAllRecruiterSelects(){ recruitersManager.refreshSelect(); }
+  function refreshAllClientSelects(){ clientsManager.refreshSelect(); }
+
+  function fillPlainSelect(sel, values, noneLabel){
+    const current = sel.value;
+    sel.innerHTML = `<option value="">${noneLabel}</option>` + values.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
+    if(values.includes(current)) sel.value = current;
+  }
+
+  // ======================================================================
+  // CANDIDATE MODAL
+  // ======================================================================
+  const overlay = document.getElementById('overlay');
+  const form = document.getElementById('candidateForm');
+
+  // Historial "de trabajo" mientras el modal está abierto. Se confirma
+  // (se copia al candidato real) solo al presionar Guardar.
+  let workingHistory = [];
+  let editingHistoryEventId = null;
+
+  function openModal(candidate){
+    editingId = candidate ? candidate.id : null;
+    document.getElementById('modalTitle').textContent = candidate ? t('editCandidateTitle') : t('newCandidateTitle');
+    document.getElementById('deleteBtn').style.display = candidate ? 'inline-block' : 'none';
+    refreshAllRecruiterSelects();
+    refreshAllClientSelects();
+    FIELDS.forEach(f=>{
+      const el = document.getElementById('f-'+f);
+      el.value = candidate ? (candidate[f] ?? '') : '';
+    });
+
+    workingHistory = candidate && candidate.statusHistory
+      ? candidate.statusHistory.map(ev=>({...ev}))
+      : [];
+    editingHistoryEventId = null;
+    document.getElementById('historyNewDate').value = todayISO();
+    document.getElementById('historyNewStatus').value = '';
+    document.getElementById('historyNewStage').value = '';
+    document.getElementById('historyNewNote').value = '';
+    renderHistoryPanel();
+
+    overlay.classList.add('active');
+  }
+  function closeModal(){ overlay.classList.remove('active'); editingId=null; workingHistory=[]; editingHistoryEventId=null; form.reset(); }
+
+  document.getElementById('addCandidateBtn').addEventListener('click', ()=>openModal(null));
+  document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
+  document.getElementById('cancelBtn').addEventListener('click', closeModal);
+  overlay.addEventListener('click', e=>{ if(e.target===overlay) closeModal(); });
+
+  // ---------- History panel rendering ----------
+  function renderHistoryPanel(){
+    const list = document.getElementById('statusHistoryList');
+    const ordered = sortedHistoryArray(workingHistory);
+
+    if(ordered.length===0){
+      list.innerHTML = `<div class="history-empty">${t('noHistoryYet')}</div>`;
+    } else {
+      list.innerHTML = ordered.map(ev=>{
+        if(ev.id===editingHistoryEventId){
+          return historyEditRowHtml(ev);
+        }
+        return historyDisplayRowHtml(ev);
+      }).join('');
+    }
+
+    wireHistoryRowEvents();
+    renderCurrentStatusStageDisplay();
+  }
+
+  function sortedHistoryArray(history){
+    return history.slice().sort((a,b)=> (a.date||'').localeCompare(b.date||''));
+  }
+
+  function historyDisplayRowHtml(ev){
+    return `
+      <div class="history-row" data-event-id="${ev.id}">
+        <span class="history-date">${fmtDate(ev.date)}</span>
+        <span class="history-badges">
+          ${ev.status ? statusBadge(ev.status) : ''}
+          ${ev.stage ? `<span class="badge badge-withdrawn">${escapeHtml(stageLabel(ev.stage))}</span>` : ''}
+        </span>
+        <span class="history-actions">
+          <button type="button" class="icon-btn-xs history-edit-btn" title="Editar">${ICON_EDIT}</button>
+          <button type="button" class="btn-x btn-x-sm history-delete-btn" title="Eliminar">${ICON_X}</button>
+        </span>
+        ${ev.note ? `<span class="history-note">${escapeHtml(ev.note)}</span>` : ''}
+      </div>
+    `;
+  }
+
+  function historyEditRowHtml(ev){
+    return `
+      <div class="history-row editing" data-event-id="${ev.id}">
+        <div class="history-edit-fields">
+          <input type="date" class="history-edit-date" value="${escapeHtml(ev.date||'')}">
+          <select class="history-edit-status">
+            <option value="">—</option>
+            ${Lookups.status.pairs.map(([raw,key])=>`<option value="${raw}" ${raw===ev.status?'selected':''}>${escapeHtml(t(key))}</option>`).join('')}
+          </select>
+          <select class="history-edit-stage">
+            <option value="">—</option>
+            ${Lookups.stage.pairs.map(([raw,key])=>`<option value="${raw}" ${raw===ev.stage?'selected':''}>${escapeHtml(t(key))}</option>`).join('')}
+          </select>
+          <input type="text" class="history-edit-note" value="${escapeHtml(ev.note||'')}" placeholder="${t('phHistoryNote')}">
+          <button type="button" class="btn btn-primary btn-sm history-save-btn">${t('saveBtn')}</button>
+          <button type="button" class="btn btn-sm history-cancel-btn">${t('cancelBtn')}</button>
+        </div>
+      </div>
+    `;
+  }
+
+  function wireHistoryRowEvents(){
+    document.querySelectorAll('#statusHistoryList .history-edit-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        editingHistoryEventId = btn.closest('.history-row').dataset.eventId;
+        renderHistoryPanel();
+      });
+    });
+    document.querySelectorAll('#statusHistoryList .history-delete-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const id = btn.closest('.history-row').dataset.eventId;
+        if(workingHistory.length<=1){ alert(t('historyMinOneEvent')); return; }
+        if(!confirm(t('deleteHistoryEventConfirm'))) return;
+        workingHistory = workingHistory.filter(ev=>ev.id!==id);
+        renderHistoryPanel();
+      });
+    });
+    document.querySelectorAll('#statusHistoryList .history-cancel-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{ editingHistoryEventId=null; renderHistoryPanel(); });
+    });
+    document.querySelectorAll('#statusHistoryList .history-save-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const row = btn.closest('.history-row');
+        const id = row.dataset.eventId;
+        const date = row.querySelector('.history-edit-date').value || todayISO();
+        const status = row.querySelector('.history-edit-status').value;
+        const stage = row.querySelector('.history-edit-stage').value;
+        const note = row.querySelector('.history-edit-note').value.trim();
+        const ev = workingHistory.find(e=>e.id===id);
+        if(ev){ ev.date=date; ev.status=status; ev.stage=stage; ev.note=note; }
+        editingHistoryEventId = null;
+        renderHistoryPanel();
+      });
+    });
+  }
+
+  function renderCurrentStatusStageDisplay(){
+    const display = document.getElementById('currentStatusStageDisplay');
+    const ordered = sortedHistoryArray(workingHistory);
+    if(ordered.length===0){
+      display.innerHTML = `<span class="history-empty">${t('noHistoryYet')}</span>`;
+      return;
+    }
+    const latest = ordered[ordered.length-1];
+    display.innerHTML = `
+      ${latest.status ? statusBadge(latest.status) : ''}
+      ${latest.stage ? `<span class="badge badge-withdrawn">${escapeHtml(stageLabel(latest.stage))}</span>` : ''}
+      <span class="history-date">${fmtDate(latest.date)}</span>
+    `;
+  }
+
+  document.getElementById('addHistoryEventBtn').addEventListener('click', ()=>{
+    const date = document.getElementById('historyNewDate').value || todayISO();
+    const status = document.getElementById('historyNewStatus').value;
+    const stage = document.getElementById('historyNewStage').value;
+    const note = document.getElementById('historyNewNote').value.trim();
+    if(!status && !stage){ alert(t('historyNeedsStatusOrStage')); return; }
+    workingHistory.push(makeHistoryEvent(date, status, stage, note));
+    document.getElementById('historyNewStatus').value = '';
+    document.getElementById('historyNewStage').value = '';
+    document.getElementById('historyNewNote').value = '';
+    renderHistoryPanel();
+  });
+
+  document.getElementById('saveBtn').addEventListener('click', ()=>{
+    const firstName = document.getElementById('f-firstName').value.trim();
+    const lastName = document.getElementById('f-lastName').value.trim();
+    if(!firstName || !lastName){ alert(t('nameRequired')); return; }
+    if(workingHistory.length===0){
+      // Toda alta necesita al menos un evento; si no se agregó ninguno,
+      // se crea uno "Sourced" con la fecha de hoy para no dejar el
+      // proceso sin estado/etapa.
+      workingHistory.push(makeHistoryEvent(todayISO(), 'In Progress', 'Sourced', ''));
+    }
+    const data = {};
+    FIELDS.forEach(f=>{
+      let v = document.getElementById('f-'+f).value;
+      if(f==='experience' || f==='salaryExpectation'){ v = v===''? '' : parseFloat(v); }
+      data[f]=v;
+    });
+    data.statusHistory = workingHistory.map(ev=>({...ev}));
+    if(data.recruiter && !recruiters.includes(data.recruiter)) recruiters.push(data.recruiter);
+    if(data.client && !clients.includes(data.client)) clients.push(data.client);
+    let target;
+    if(editingId){
+      const idx = candidates.findIndex(c=>c.id===editingId);
+      candidates[idx] = {...candidates[idx], ...data};
+      target = candidates[idx];
+    } else {
+      target = {id:cryptoId(), ...data};
+      candidates.push(target);
+    }
+    recomputeCurrentStatusStage(target);
+    closeModal();
+    scheduleSave();
+    renderAll();
+  });
+
+  document.getElementById('deleteBtn').addEventListener('click', ()=>{
+    if(!editingId) return;
+    if(confirm(t('deleteConfirm'))){
+      candidates = candidates.filter(c=>c.id!==editingId);
+      closeModal();
+      scheduleSave();
+      renderAll();
+    }
+  });
+
+  // ======================================================================
+  // DATABASE FILTERS
+  // ======================================================================
+  const searchInput = document.getElementById('searchInput');
+  const filterPosition = document.getElementById('filterPosition');
+  const filterStatus = document.getElementById('filterStatus');
+  const filterStage = document.getElementById('filterStage');
+  const filterRecruiter = document.getElementById('filterRecruiter');
+  const filterClient = document.getElementById('filterClient');
+
+  [searchInput].forEach(el=>el.addEventListener('input', renderTable));
+  [filterPosition, filterStatus, filterStage, filterRecruiter, filterClient].forEach(el=>el.addEventListener('change', renderTable));
+
+  function uniqueValues(key){
+    return Array.from(new Set(candidates.map(c=>c[key]).filter(v=>v!=='' && v!=null))).sort();
+  }
+
+  function rebuildFilterOptions(){
+    fillSelectKeyed(filterPosition, uniqueValues('position'), t('allPositions'));
+    fillSelectKeyed(filterStatus, Lookups.status.usedBy(candidates, c=>c.status), t('allStatuses'), true);
+    fillSelectKeyed(filterStage, Lookups.stage.usedBy(candidates, c=>c.stage), t('allStages'), true);
+    fillSelectKeyed(filterRecruiter, uniqueValues('recruiter'), t('allRecruiters'));
+    fillSelectKeyed(filterClient, uniqueValues('client'), t('allClients'));
+
+    fillSelectKeyed(document.getElementById('dashFilterPosition'), uniqueValues('position'), t('allPositions'));
+    fillSelectKeyed(document.getElementById('dashFilterRecruiter'), uniqueValues('recruiter'), t('allRecruiters'));
+    fillSelectKeyed(document.getElementById('dashFilterClient'), uniqueValues('client'), t('allClients'));
+  }
+  function fillSelectKeyed(sel, values, placeholder, isKeyed){
+    const current = sel.value;
+    let opts;
+    if(isKeyed){
+      opts = values.map(([raw,key])=>`<option value="${escapeHtml(raw)}">${escapeHtml(t(key))}</option>`).join('');
+    } else {
+      opts = values.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
+    }
+    sel.innerHTML = `<option value="">${placeholder}</option>` + opts;
+    if(current) sel.value = current;
+  }
+
+  function getFiltered(){
+    const q = searchInput.value.trim().toLowerCase();
+    return candidates.filter(c=>{
+      if(filterPosition.value && c.position!==filterPosition.value) return false;
+      if(filterStatus.value && c.status!==filterStatus.value) return false;
+      if(filterStage.value && c.stage!==filterStage.value) return false;
+      if(filterRecruiter.value && c.recruiter!==filterRecruiter.value) return false;
+      if(filterClient.value && c.client!==filterClient.value) return false;
+      if(q){
+        const hay = [fullNameOf(c),c.jobTitle,c.email,c.currentCompany,c.university,c.notes,c.position,c.location,c.client]
+          .filter(Boolean).join(' ').toLowerCase();
+        if(!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }
+
+  document.querySelectorAll('#dbTable thead th[data-key]').forEach(th=>{
+    th.addEventListener('click', ()=>{
+      const key = th.dataset.key;
+      if(sortKey===key){ sortDir*=-1; } else { sortKey=key; sortDir=1; }
+      renderTable();
+    });
+  });
+
+  function statusBadge(status){
+    if(!status) return '';
+    const cls = STATUS_BADGE_CLASS[status] || 'badge-withdrawn';
+    return `<span class="badge ${cls}">${escapeHtml(Lookups.status.label(status))}</span>`;
+  }
+  function stageLabel(stage){ return Lookups.stage.label(stage); }
+  function outcomeLabel(outcome){ return Lookups.outcome.label(outcome); }
+
+  function renderTable(){
+    rebuildFilterOptions();
+    let rows = getFiltered();
+    if(sortKey){
+      rows = rows.slice().sort((a,b)=>{
+        let av = a[sortKey] ?? '', bv = b[sortKey] ?? '';
+        if(typeof av === 'number' || typeof bv === 'number'){ av=parseFloat(av)||0; bv=parseFloat(bv)||0; }
+        else { av=String(av).toLowerCase(); bv=String(bv).toLowerCase(); }
+        if(av<bv) return -1*sortDir;
+        if(av>bv) return 1*sortDir;
+        return 0;
+      });
+    }
+    document.querySelectorAll('#dbTable thead th').forEach(th=>th.classList.remove('sorted','sorted-asc'));
+    if(sortKey){
+      const th = document.querySelector(`#dbTable thead th[data-key="${sortKey}"]`);
+      if(th) th.classList.add(sortDir===1?'sorted':'sorted-asc');
+    }
+
+    const tbody = document.getElementById('dbTbody');
+    if(rows.length===0){
+      tbody.innerHTML = `<tr><td colspan="30"><div class="empty-state"><strong>${t('noResults')}</strong>${t('noResultsSub')}</div></td></tr>`;
+    } else {
+      tbody.innerHTML = rows.map(c=>`
+        <tr data-id="${c.id}">
+          <td class="cell-name">${escapeHtml(c.firstName)}</td>
+          <td class="cell-name">${escapeHtml(c.lastName)}</td>
+          <td>${escapeHtml(c.jobTitle)}</td>
+          <td class="cell-muted">${escapeHtml(c.email)}</td>
+          <td class="cell-muted">${escapeHtml(c.phone)}</td>
+          <td>${escapeHtml(c.position)}</td>
+          <td>${escapeHtml(c.client)}</td>
+          <td>${escapeHtml(c.team)}</td>
+          <td>${escapeHtml(c.seniority)}</td>
+          <td>${escapeHtml(c.location)}</td>
+          <td>${escapeHtml(c.university)}</td>
+          <td>${c.experience ?? ''}</td>
+          <td>${escapeHtml(c.currentCompany)}</td>
+          <td>${c.salaryExpectation ?? ''}</td>
+          <td>${escapeHtml(c.currency)}</td>
+          <td>${escapeHtml(c.availability)}</td>
+          <td>${escapeHtml(c.source)}</td>
+          <td>${escapeHtml(c.recruiter)}</td>
+          <td>${statusBadge(c.status)}</td>
+          <td>${escapeHtml(stageLabel(c.stage))}</td>
+          <td>${escapeHtml(outcomeLabel(c.outcome))}</td>
+          <td>${escapeHtml(c.englishLevel)}</td>
+          <td class="cell-muted">${fmtDate(c.interviewDate)}</td>
+          <td class="cell-muted">${fmtDate(c.lastContact)}</td>
+          <td class="cell-muted">${fmtDate(c.nextFollowUp)}</td>
+          <td class="cell-muted">${fmtDate(c.clientSubmissionDate)}</td>
+          <td>${escapeHtml(c.clientFeedback)}</td>
+          <td class="cell-muted" title="${escapeHtml(c.notes)}">${truncate(c.notes,28)}</td>
+          <td class="actions-cell">
+            <button class="btn btn-sm edit-row">${currentLang==='es'?'Editar':'Edit'}</button>
+          </td>
+        </tr>
+      `).join('');
+      tbody.querySelectorAll('tr').forEach(tr=>{
+        tr.addEventListener('click', ()=>{
+          const id = tr.dataset.id;
+          const c = candidates.find(x=>x.id===id);
+          openModal(c);
+        });
+      });
+    }
+    document.getElementById('resultsCount').textContent = t('resultsCount', rows.length, candidates.length);
+  }
+
+  function fmtDate(d){
+    if(!d) return '';
+    const parts = d.split('-');
+    if(parts.length!==3) return d;
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  }
+  function truncate(s,n){ if(!s) return ''; return s.length>n? escapeHtml(s.slice(0,n))+'…' : escapeHtml(s); }
+  function escapeHtml(s){
+    if(s===null||s===undefined) return '';
+    return String(s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+
+  // Iconos SVG reutilizables (un solo lugar para mantener consistencia).
+  const ICON_X = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+  const ICON_EDIT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
+
+  // ======================================================================
+  // CSV EXPORT / IMPORT
+  // ======================================================================
+  function buildCsv(rows){
+    const lines = [CSV_HEADERS.join(',')];
+    rows.forEach(c=>{
+      const line = CSV_FIELDS.map(f=>{
+        let v = c[f] ?? '';
+        v = String(v).replace(/"/g,'""');
+        if(v.includes(',') || v.includes('\n')) v = `"${v}"`;
+        return v;
+      }).join(',');
+      lines.push(line);
+    });
+    return lines.join('\n');
+  }
+
+  function downloadCsv(triggeredByAuto){
+    const csv = buildCsv(candidates);
+    const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const stamp = new Date().toISOString().slice(0,16).replace(/[:T]/g,'-');
+    a.href = url; a.download = `pipeline_candidatos_${stamp}.csv`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    settings.lastBackupAt = new Date().toISOString();
+    scheduleSave();
+    updateBackupStatusLine();
+  }
+
+  document.getElementById('exportCsvBtn').addEventListener('click', ()=>downloadCsv(false));
+
+  document.getElementById('resetDbBtn').addEventListener('click', ()=>{
+    if(!confirm(t('resetDbConfirm'))) return;
+    candidates = [];
+    recruiters = [];
+    clients = [];
+    refreshAllRecruiterSelects();
+    refreshAllClientSelects();
+    scheduleSave();
+    renderAll();
+  });
+
+  document.getElementById('importCsvBtn').addEventListener('click', ()=>{
+    document.getElementById('fileImportInput').click();
+  });
+  document.getElementById('fileImportInput').addEventListener('change', (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    if(!confirm(t('importConfirm'))){ e.target.value=''; return; }
+    const reader = new FileReader();
+    reader.onload = (ev)=>{
+      try{
+        const imported = parseCsv(ev.target.result);
+        candidates = candidates.concat(imported);
+        scheduleSave();
+        renderAll();
+        renderRecruitersList(); renderClientsList();
+        refreshAllRecruiterSelects(); refreshAllClientSelects();
+        alert(t('importSuccess', imported.length));
+      }catch(err){
+        console.error(err);
+        alert(t('importError'));
+      }
+      e.target.value='';
+    };
+    reader.readAsText(file, 'utf-8');
+  });
+
+  function parseCsv(text){
+    const lines = text.split(/\r?\n/).filter(l=>l.trim()!=='');
+    if(lines.length<2) return [];
+    const rows = lines.slice(1).map(line=>splitCsvLine(line));
+    return rows.map(cols=>{
+      const obj = {id:cryptoId()};
+      CSV_FIELDS.forEach((f,i)=>{
+        let v = cols[i] !== undefined ? cols[i] : '';
+        if(f==='experience' || f==='salaryExpectation'){ v = v===''? '' : parseFloat(v); }
+        obj[f]=v;
+      });
+      // El CSV solo trae el estado/etapa "actuales", no un historial
+      // completo. Se genera un único evento de historial con esos
+      // valores, fechado hoy, para que el candidato importado quede
+      // consistente con el modelo de historial del resto de la app.
+      obj.statusHistory = [ makeHistoryEvent(todayISO(), obj.status, obj.stage, '') ];
+      if(obj.recruiter && !recruiters.includes(obj.recruiter)) recruiters.push(obj.recruiter);
+      if(obj.client && !clients.includes(obj.client)) clients.push(obj.client);
+      recomputeCurrentStatusStage(obj);
+      return obj;
+    });
+  }
+  function splitCsvLine(line){
+    const out = []; let cur=''; let inQuotes=false;
+    for(let i=0;i<line.length;i++){
+      const ch = line[i];
+      if(inQuotes){
+        if(ch==='"'){
+          if(line[i+1]==='"'){ cur+='"'; i++; } else { inQuotes=false; }
+        } else { cur+=ch; }
+      } else {
+        if(ch==='"'){ inQuotes=true; }
+        else if(ch===','){ out.push(cur); cur=''; }
+        else { cur+=ch; }
+      }
+    }
+    out.push(cur);
+    return out;
+  }
+
+  // ======================================================================
+  // CONFIG: auto backup + alert thresholds
+  // ======================================================================
+  let autoBackupTimer = null;
+
+  function applySettingsToUI(){
+    document.getElementById('autoBackupToggle').classList.toggle('on', !!settings.autoBackupEnabled);
+    document.getElementById('autoBackupInterval').value = settings.autoBackupIntervalMin || 30;
+    document.getElementById('staleContactDays').value = settings.staleContactDays || 14;
+    document.getElementById('staleStageDays').value = settings.staleStageDays || 21;
+    updateBackupStatusLine();
+  }
+
+  function updateBackupStatusLine(){
+    const dot = document.getElementById('backupStatusDot');
+    const text = document.getElementById('backupStatusText');
+    if(settings.autoBackupEnabled){
+      dot.classList.remove('off');
+      let msg = t('backupStatusOn', settings.autoBackupIntervalMin);
+      if(settings.lastBackupAt){
+        const time = new Date(settings.lastBackupAt).toLocaleString(currentLang==='es'?'es-AR':'en-US');
+        msg += ' · ' + t('lastBackup', time);
+      } else {
+        msg += ' · ' + t('neverBackedUp');
+      }
+      text.textContent = msg;
+    } else {
+      dot.classList.add('off');
+      text.textContent = t('backupStatusOff');
+    }
+  }
+
+  document.getElementById('autoBackupToggle').addEventListener('click', ()=>{
+    settings.autoBackupEnabled = !settings.autoBackupEnabled;
+    applySettingsToUI();
+    setupAutoBackupTimer();
+    scheduleSave();
+  });
+  document.getElementById('autoBackupInterval').addEventListener('change', (e)=>{
+    let v = parseInt(e.target.value, 10);
+    if(isNaN(v) || v<1) v=1;
+    if(v>1440) v=1440;
+    settings.autoBackupIntervalMin = v;
+    e.target.value = v;
+    setupAutoBackupTimer();
+    updateBackupStatusLine();
+    scheduleSave();
+  });
+  document.getElementById('staleContactDays').addEventListener('change', (e)=>{
+    let v = parseInt(e.target.value,10); if(isNaN(v)||v<1) v=1;
+    settings.staleContactDays = v; e.target.value=v;
+    scheduleSave(); renderDashboard();
+  });
+  document.getElementById('staleStageDays').addEventListener('change', (e)=>{
+    let v = parseInt(e.target.value,10); if(isNaN(v)||v<1) v=1;
+    settings.staleStageDays = v; e.target.value=v;
+    scheduleSave(); renderDashboard();
+  });
+
+  function setupAutoBackupTimer(){
+    clearInterval(autoBackupTimer);
+    if(settings.autoBackupEnabled){
+      const ms = Math.max(1, settings.autoBackupIntervalMin) * 60 * 1000;
+      autoBackupTimer = setInterval(()=>downloadCsv(true), ms);
+    }
+  }
+
+  // ======================================================================
+  // DASHBOARD (with its own filters)
+  // ======================================================================
+  const dashFilterPosition = document.getElementById('dashFilterPosition');
+  const dashFilterRecruiter = document.getElementById('dashFilterRecruiter');
+  const dashFilterClient = document.getElementById('dashFilterClient');
+  const dashFilterDateFrom = document.getElementById('dashFilterDateFrom');
+  const dashFilterDateTo = document.getElementById('dashFilterDateTo');
+
+  [dashFilterPosition, dashFilterRecruiter, dashFilterClient, dashFilterDateFrom, dashFilterDateTo]
+    .forEach(el=>el.addEventListener('change', renderDashboard));
+
+  document.getElementById('dashClearFilters').addEventListener('click', ()=>{
+    dashFilterPosition.value=''; dashFilterRecruiter.value=''; dashFilterClient.value='';
+    dashFilterDateFrom.value=''; dashFilterDateTo.value='';
+    renderDashboard();
+  });
+
+  function candidateRefDate(c){
+    return c.interviewDate || c.clientSubmissionDate || c.lastContact || c.nextFollowUp || '';
+  }
+
+  function getDashboardFiltered(){
+    return candidates.filter(c=>{
+      if(dashFilterPosition.value && c.position!==dashFilterPosition.value) return false;
+      if(dashFilterRecruiter.value && c.recruiter!==dashFilterRecruiter.value) return false;
+      if(dashFilterClient.value && c.client!==dashFilterClient.value) return false;
+      const ref = candidateRefDate(c);
+      if(dashFilterDateFrom.value){
+        if(!ref || ref < dashFilterDateFrom.value) return false;
+      }
+      if(dashFilterDateTo.value){
+        if(!ref || ref > dashFilterDateTo.value) return false;
+      }
+      return true;
+    });
+  }
+
+  function computeAlerts(data){
+    const today = todayISO();
+    const alerts = [];
+    data.forEach(c=>{
+      const activeProcess = !['Hired','Rejected','Withdrawn'].includes(c.status);
+      if(!activeProcess) return;
+      if(c.nextFollowUp && c.nextFollowUp < today){
+        alerts.push({c, type:'overdue', days: daysBetween(c.nextFollowUp, today)});
+      }
+      const lastRef = c.lastContact || c.interviewDate;
+      if(lastRef){
+        const days = daysBetween(lastRef, today);
+        if(days >= settings.staleContactDays){
+          alerts.push({c, type:'stale_contact', days});
+        }
+      }
+      if(c.stageChangedAt){
+        const days = daysBetween(c.stageChangedAt, today);
+        if(days >= settings.staleStageDays){
+          alerts.push({c, type:'stale_stage', days});
+        }
+      }
+    });
+    alerts.sort((a,b)=>b.days-a.days);
+    return alerts;
+  }
+
+  function renderDashboard(){
+    rebuildFilterOptions();
+    const data = getDashboardFiltered();
+    const total = data.length;
+    const hired = data.filter(c=>c.status==='Hired').length;
+    const active = data.filter(c=>c.status==='In Progress').length;
+    const rejected = data.filter(c=>c.status==='Rejected').length;
+    const withdrawn = data.filter(c=>c.status==='Withdrawn').length;
+    const onHold = data.filter(c=>c.status==='On Hold').length;
+    const conversionRate = total ? Math.round((hired/total)*100) : 0;
+
+    const alerts = computeAlerts(data);
+
+    const kpis = [
+      {label:t('kpiTotal'), value:total, sub:t('candidatesInPipeline'), tone:'neutral'},
+      {label:t('kpiActive'), value:active, sub:t('activeToday'), tone:'accent'},
+      {label:t('kpiHired'), value:hired, sub:t('ofTotal', conversionRate), tone:'ok'},
+      {label:t('kpiOnHold'), value:onHold, sub:t('onHoldSub'), tone:'warn'},
+      {label:t('kpiRejected'), value:rejected, sub:t('discardedSub'), tone:'bad'},
+      {label:t('kpiWithdrawn'), value:withdrawn, sub:t('declinedSub'), tone:'muted'},
+    ];
+    document.getElementById('kpiGrid').innerHTML = kpis.map(k=>`
+      <div class="kpi-card kpi-${k.tone}">
+        <div class="kpi-label">${k.label}</div>
+        <div class="kpi-value">${k.value}</div>
+        <div class="kpi-sub">${k.sub}</div>
+      </div>
+    `).join('');
+
+    // Alerts panel
+    const uniqueAlertCandidates = new Set(alerts.map(a=>a.c.id));
+    document.getElementById('alertsCount').textContent = uniqueAlertCandidates.size;
+    const navBadge = document.getElementById('navAlertBadge');
+    if(uniqueAlertCandidates.size>0){ navBadge.style.display='inline-block'; navBadge.textContent=uniqueAlertCandidates.size; }
+    else { navBadge.style.display='none'; }
+
+    const alertsList = document.getElementById('alertsList');
+    if(alerts.length===0){
+      alertsList.innerHTML = `<div style="color:var(--ink-soft);padding:8px 2px;">${t('noAlerts')}</div>`;
+    } else {
+      alertsList.innerHTML = alerts.slice(0,10).map(a=>{
+        let detail, cls;
+        if(a.type==='overdue'){ detail = t('alertOverdueFollowup', a.days); cls='badge-alert-overdue'; }
+        else if(a.type==='stale_contact'){ detail = t('alertStaleContact', a.days); cls='badge-alert-stale'; }
+        else { detail = t('alertStaleStage', a.days).replace('%STAGE%', stageLabel(a.c.stage)); cls='badge-alert-stale'; }
+        return `<div class="alert-row">
+          <span class="alert-name">${escapeHtml(fullNameOf(a.c))}</span>
+          <span class="badge ${cls}">${escapeHtml(detail)}</span>
+        </div>`;
+      }).join('');
+    }
+
+    // Follow-ups
+    const today = new Date(); today.setHours(0,0,0,0);
+    const followups = data
+      .filter(c=>c.nextFollowUp)
+      .map(c=>({...c, _d: new Date(c.nextFollowUp)}))
+      .sort((a,b)=>a._d-b._d);
+    document.getElementById('followupCount').textContent = followups.length;
+    const tbody = document.querySelector('#followupTable tbody');
+    if(followups.length===0){
+      tbody.innerHTML = `<tr><td colspan="3" style="color:var(--ink-soft);padding:14px 4px;">${t('noFollowups')}</td></tr>`;
+    } else {
+      tbody.innerHTML = followups.slice(0,8).map(c=>{
+        const overdue = c._d < today;
+        return `<tr>
+          <td>${escapeHtml(fullNameOf(c))}</td>
+          <td style="${overdue?'color:var(--bad);font-weight:600;':''}">${fmtDate(c.nextFollowUp)}${overdue?' '+t('overdue'):''}</td>
+          <td>${statusBadge(c.status)}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    // Funnel
+    document.getElementById('funnelTotal').textContent = t('candidatesFunnel', total);
+    const stageCounts = STAGE_KEYS.map(([raw,key])=>({label:t(key), count:data.filter(c=>c.stage===raw).length}));
+    const maxStage = Math.max(1, ...stageCounts.map(s=>s.count));
+    document.getElementById('funnelChart').innerHTML = stageCounts.map(s=>`
+      <div class="funnel-row">
+        <div class="lbl">${escapeHtml(s.label)}</div>
+        <div class="funnel-track"><div class="funnel-fill" style="width:${(s.count/maxStage*100)||0}%"></div></div>
+        <div class="val" style="font-family:var(--mono);text-align:right;color:var(--ink-soft);">${s.count}</div>
+      </div>
+    `).join('');
+
+    // Status
+    const statusCounts = STATUS_KEYS.map(([raw,key])=>({raw,label:t(key),count:data.filter(c=>c.status===raw).length}))
+      .filter(s=>s.count>0);
+    document.getElementById('statusChart').innerHTML = statusCounts.length ? `
+      <table class="mini">
+        <thead><tr><th>${t('colStatus')}</th><th>${currentLang==='es'?'Candidatos':'Candidates'}</th><th>%</th></tr></thead>
+        <tbody>
+          ${statusCounts.map(s=>`
+            <tr><td>${statusBadge(s.raw)}</td><td style="font-family:var(--mono)">${s.count}</td>
+            <td style="font-family:var(--mono);color:var(--ink-soft)">${total?Math.round(s.count/total*100):0}%</td></tr>
+          `).join('')}
+        </tbody>
+      </table>
+    ` : emptyMini();
+
+    renderBarBlock('positionChart', countBy(data,'position'));
+    renderBarBlock('recruiterChart', countBy(data,'recruiter'));
+    renderBarBlock('clientChart', countBy(data,'client'));
+
+    // Outcomes
+    const outcomeCounts = OUTCOME_KEYS.map(([raw,key])=>({label:t(key),count:data.filter(c=>c.outcome===raw).length}))
+      .filter(o=>o.count>0);
+    document.getElementById('outcomeChart').innerHTML = outcomeCounts.length ? `
+      <table class="mini">
+        <thead><tr><th>${t('colOutcome')}</th><th>${currentLang==='es'?'Candidatos':'Candidates'}</th></tr></thead>
+        <tbody>
+          ${outcomeCounts.map(o=>`<tr><td>${escapeHtml(o.label)}</td><td style="font-family:var(--mono)">${o.count}</td></tr>`).join('')}
+        </tbody>
+      </table>
+    ` : emptyMini();
+
+    renderTrendChart(data);
+  }
+
+  function emptyMini(){
+    return `<div style="color:var(--ink-soft);padding:8px 2px;">${t('noDataYet')}</div>`;
+  }
+
+  function countBy(data, key){
+    const map = {};
+    data.forEach(c=>{
+      const v = c[key] || t('noDataLabel');
+      map[v] = (map[v]||0)+1;
+    });
+    return Object.entries(map).map(([k,v])=>({label:k,count:v})).sort((a,b)=>b.count-a.count);
+  }
+
+  function renderBarBlock(elId, data){
+    const el = document.getElementById(elId);
+    if(data.length===0){ el.innerHTML = emptyMini(); return; }
+    const max = Math.max(...data.map(d=>d.count));
+    el.innerHTML = data.slice(0,10).map(d=>`
+      <div class="bar-row">
+        <div class="lbl" title="${escapeHtml(d.label)}">${escapeHtml(d.label)}</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${(d.count/max*100)||0}%"></div></div>
+        <div class="val">${d.count}</div>
+      </div>
+    `).join('');
+  }
+
+  // ---------- Monthly trend chart (SVG, no libs) ----------
+  function monthKey(iso){ return iso ? iso.slice(0,7) : null; } // "2026-06"
+  function monthLabel(key, withYear){
+    const [y,m] = key.split('-');
+    const names = currentLang==='es'
+      ? ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic']
+      : ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const label = names[parseInt(m,10)-1];
+    return withYear ? `${label} ${y.slice(2)}` : label;
+  }
+
+  function renderTrendChart(data){
+    const wrap = document.getElementById('trendChart');
+    // Siempre los 12 meses del año en curso, de enero a diciembre.
+    const year = new Date().getFullYear();
+    const months = Array.from({length:12}, (_, i)=>`${year}-${String(i+1).padStart(2,'0')}`);
+    document.getElementById('trendRange').textContent = String(year);
+
+    const sourced = {}, hiredM = {};
+    months.forEach(m=>{ sourced[m]=0; hiredM[m]=0; });
+    data.forEach(c=>{
+      const sKey = monthKey(c.interviewDate) || monthKey(c.clientSubmissionDate);
+      if(sKey && sourced.hasOwnProperty(sKey)) sourced[sKey]++;
+      if(c.status==='Hired'){
+        const hKey = monthKey(c.clientSubmissionDate) || monthKey(c.interviewDate);
+        if(hKey && hiredM.hasOwnProperty(hKey)) hiredM[hKey]++;
+      }
+    });
+
+    const sourcedVals = months.map(m=>sourced[m]);
+    const hiredVals = months.map(m=>hiredM[m]);
+    const maxVal = Math.max(1, ...sourcedVals, ...hiredVals);
+
+    const containerWidth = wrap.clientWidth || wrap.parentElement.clientWidth || 760;
+    const W = Math.max(480, containerWidth), H = 200, padL = 36, padB = 26, padT = 14, padR = 14;
+    const plotW = W - padL - padR, plotH = H - padT - padB;
+    const stepX = plotW / (months.length - 1 || 1);
+
+    function pointsFor(vals){
+      return vals.map((v,i)=>{
+        const x = padL + i*stepX;
+        const y = padT + plotH - (v/maxVal)*plotH;
+        return [x,y];
+      });
+    }
+    function toPath(pts){
+      return pts.map((p,i)=>(i===0?'M':'L')+p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
+    }
+
+    const sourcedPts = pointsFor(sourcedVals);
+    const hiredPts = pointsFor(hiredVals);
+
+    const gridLines = [];
+    for(let i=0;i<=4;i++){
+      const y = padT + (plotH/4)*i;
+      gridLines.push(`<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W-padR}" y2="${y.toFixed(1)}" stroke="var(--line-soft)" stroke-width="1"/>`);
+    }
+
+    const xLabels = months.map((m,i)=>{
+      const x = padL + i*stepX;
+      return `<text x="${x.toFixed(1)}" y="${H-6}" font-size="10.5" fill="var(--ink-soft)" text-anchor="middle">${monthLabel(m)}</text>`;
+    }).join('');
+
+    const dotsSourced = sourcedPts.map((p,i)=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.2" fill="var(--accent)"><title>${sourcedVals[i]}</title></circle>`).join('');
+    const dotsHired = hiredPts.map((p,i)=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.2" fill="var(--ok)"><title>${hiredVals[i]}</title></circle>`).join('');
+
+    const valueLabelsSourced = sourcedPts.map((p,i)=>sourcedVals[i]>0?`<text x="${p[0].toFixed(1)}" y="${(p[1]-8).toFixed(1)}" font-size="10.5" fill="var(--accent)" text-anchor="middle" font-family="var(--mono)">${sourcedVals[i]}</text>`:'').join('');
+    const valueLabelsHired = hiredPts.map((p,i)=>hiredVals[i]>0?`<text x="${p[0].toFixed(1)}" y="${(p[1]+16).toFixed(1)}" font-size="10.5" fill="var(--ok)" text-anchor="middle" font-family="var(--mono)">${hiredVals[i]}</text>`:'').join('');
+
+    wrap.innerHTML = `
+      <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:220px;display:block;">
+        ${gridLines.join('')}
+        <path d="${toPath(sourcedPts)}" fill="none" stroke="var(--accent)" stroke-width="2"/>
+        <path d="${toPath(hiredPts)}" fill="none" stroke="var(--ok)" stroke-width="2"/>
+        ${dotsSourced}
+        ${dotsHired}
+        ${valueLabelsSourced}
+        ${valueLabelsHired}
+        ${xLabels}
+      </svg>
+      <div class="trend-legend">
+        <span><span class="legend-dot" style="background:var(--accent)"></span>${currentLang==='es'?'Entrevistados / enviados':'Interviewed / submitted'}</span>
+        <span><span class="legend-dot" style="background:var(--ok)"></span>${t('kpiHired')}</span>
+      </div>
+    `;
+  }
+
+  function renderAll(){
+    renderTable();
+    renderDashboard();
+    renderRecruitersList();
+    renderClientsList();
+  }
+
+  // ======================================================================
+  // INIT
+  // ======================================================================
+  document.querySelector('.lang-btn[data-lang="en"]').classList.add('active');
+  applyStaticTranslations();
+  refreshAllRecruiterSelects();
+  refreshAllClientSelects();
+  let resizeRedrawTimer = null;
+  window.addEventListener('resize', ()=>{
+    clearTimeout(resizeRedrawTimer);
+    resizeRedrawTimer = setTimeout(()=>{
+      const dashView = document.getElementById('view-dashboard');
+      if(dashView.classList.contains('active')) renderTrendChart(getDashboardFiltered());
+    }, 150);
+  });
+
+  document.getElementById('appFooterVersion').textContent = `v${APP_VERSION}`;
+  loadFromStorage();
+})();
+</script>
+</body>
+</html>
