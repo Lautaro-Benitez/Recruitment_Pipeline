@@ -4,6 +4,39 @@ Todos los cambios relevantes de este proyecto se documentan en este archivo.
 
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y el proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.5.0] - 2026-06-24
+
+### Agregado
+- Panel de "Efectividad por fuente de contratación" en el Dashboard: por cada canal muestra candidatos totales, contratados y tasa de contratación.
+- Recordatorios de seguimiento más visibles: el contador del menú lateral ahora refleja toda la base (no los filtros del dashboard), con un tooltip que detalla cuántos candidatos tienen seguimiento pendiente o atrasado.
+- Botón "Exportar filtrado (CSV)" en el Dashboard, que exporta solo los candidatos que cumplen los filtros activos.
+
+### Cambiado
+- Al imprimir o guardar el reporte como PDF, el navegador sugiere un nombre de archivo estructurado (ej. `Pipeline_Report_Overall_2026-06-24`), que incorpora el filtro principal activo.
+
+## [1.4.1] - 2026-06-24
+
+### Limpieza interna (sin cambios funcionales)
+- Eliminadas reglas CSS huérfanas (`.alert-detail`, `.modal-sm`, `.config-card.full`).
+- Eliminada la función vacía `setSaveStatus` y sus llamadas sin efecto.
+- Consolidada la lógica de ordenamiento del historial en una única función, eliminando código duplicado.
+- Eliminadas claves de traducción sin uso (`collapseNav`, `exportCsv`, `lastSavedLocal`, `savingLocal`, `lblStatus`, `lblStage`).
+
+## [1.4.0] - 2026-06-24
+
+### Agregado
+- Filtros de Estado y Etapa en el Dashboard, que también se reflejan en el encabezado del reporte impreso.
+- Visualización de la fecha y hora de la última exportación en la tarjeta de exportación manual.
+
+### Cambiado
+- El título de cada vista ahora se muestra a la misma altura que el selector de idioma, eliminando el espacio vacío superior.
+- El módulo de Configuración se reorganizó en grupos por tipo: "Datos y respaldo", "Listas maestras" y "Alertas".
+
+## [1.3.0] - 2026-06-24
+
+### Agregado
+- Botón "Imprimir reporte" en el Dashboard: genera una versión imprimible (o "Guardar como PDF") del dashboard ya filtrado, lista para compartir con un superior. Incluye un encabezado con la fecha de generación y los filtros aplicados, y oculta el menú lateral, los controles y el pie de página para una salida limpia en papel.
+
 ## [1.2.1] - 2026-06-24
 
 ### Cambiado

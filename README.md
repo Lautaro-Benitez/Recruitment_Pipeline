@@ -1,6 +1,6 @@
 # Pipeline de Reclutamiento
 
-[![Version](https://img.shields.io/badge/version-1.2.1-blue)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.5.0-blue)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-lightgrey)](LICENSE)
 [![Stack](https://img.shields.io/badge/stack-HTML%20%2B%20CSS%20%2B%20JS-informational)](#stack-técnico)
 [![Backend](https://img.shields.io/badge/backend-none-lightgrey)](#stack-técnico)
