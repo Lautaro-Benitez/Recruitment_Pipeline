@@ -397,6 +397,24 @@
     background:var(--panel);border-radius:var(--radius-lg);width:100%;max-width:760px;
     box-shadow:0 20px 50px rgba(24,24,27,.22);
   }
+  .modal.modal-narrow{max-width:520px;}
+  .whatsnew-version{
+    display:inline-block;font-family:var(--mono);font-size:11px;font-weight:700;
+    color:var(--accent);background:var(--accent-soft);border-radius:99px;padding:3px 10px;margin-bottom:14px;
+  }
+  .whatsnew-group{margin-bottom:16px;}
+  .whatsnew-group:last-child{margin-bottom:0;}
+  .whatsnew-group h4{
+    font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
+    color:var(--gray-500);margin:0 0 8px;
+  }
+  .whatsnew-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;}
+  .whatsnew-list li{
+    position:relative;padding-left:20px;font-size:13px;color:var(--gray-700);line-height:1.45;
+  }
+  .whatsnew-list li::before{
+    content:"";position:absolute;left:4px;top:7px;width:6px;height:6px;border-radius:50%;background:var(--accent);
+  }
   .modal-head{
     display:flex;justify-content:space-between;align-items:center;
     padding:20px 24px 10px;
@@ -508,9 +526,16 @@
 
   /* ---------- Print styles ---------- */
   @media print{
-    @page{ margin:14mm; }
-    html,body{background:#fff;}
-    .sidebar, .topbar, .dash-toolbar, .app-footer, .nav-badge{ display:none !important; }
+    @page{ size:A4; margin:16mm 14mm; }
+    /* Forzar que el navegador imprima los colores de fondo y acentos */
+    html,body{
+      background:#fff;
+      -webkit-print-color-adjust:exact;
+      print-color-adjust:exact;
+    }
+    *{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+
+    .sidebar, .topbar, .dash-toolbar, .app-footer{ display:none !important; }
     .shell{display:block;}
     .main{display:block;min-height:auto;}
     .app{max-width:none;padding:0;}
@@ -520,22 +545,26 @@
 
     .report-header{
       display:flex;justify-content:space-between;align-items:flex-end;gap:16px;
-      border-bottom:2px solid #111;padding-bottom:10px;margin-bottom:18px;
+      border-bottom:2px solid var(--accent);padding-bottom:10px;margin-bottom:18px;
     }
-    .report-brand h1{font-size:17px;font-weight:700;margin:0 0 2px;color:#111;}
-    .report-brand span{font-size:12px;color:#555;}
-    .report-meta{font-size:11px;color:#333;text-align:right;line-height:1.6;}
-    .report-meta b{color:#111;}
+    .report-brand h1{font-size:17px;font-weight:700;margin:0 0 2px;color:var(--ink);}
+    .report-brand span{font-size:12px;color:var(--ink-soft);}
+    .report-meta{font-size:11px;color:var(--gray-700);text-align:right;line-height:1.6;}
+    .report-meta b{color:var(--ink);}
 
-    /* Tarjetas y paneles legibles en papel */
-    .kpi-card, .panel{ box-shadow:none !important; border:1px solid #ccc !important; break-inside:avoid; }
-    .panel-grid{ break-inside:avoid; }
-    .kpi-value{ color:#111 !important; }
-    .bar-fill, .funnel-fill{ background:#555 !important; }
-    .badge{ border:1px solid #bbb; background:#fff !important; color:#222 !important; }
-    .trend-wrap svg path{ stroke:#333 !important; }
-    .trend-wrap svg circle{ fill:#333 !important; }
-    .panel{ page-break-inside:avoid; }
+    /* Mantener tarjetas y paneles con sus colores, solo sin sombra */
+    .kpi-card, .panel{ box-shadow:none !important; border:1px solid var(--gray-300) !important; }
+    /* Evitar que un panel/tarjeta se parta entre dos páginas */
+    .kpi-card, .panel, .panel-grid, table, tr, .funnel-row, .bar-row, .alert-row{
+      break-inside:avoid; page-break-inside:avoid;
+    }
+    /* El embudo y la tendencia quedan juntos con su título */
+    .panel h2{ break-after:avoid; page-break-after:avoid; }
+    /* Compactar un poco para aprovechar el A4 */
+    .kpi-grid{ gap:8px; margin-bottom:14px; }
+    .panel-grid{ gap:10px; margin-bottom:10px; }
+    .panel{ padding:12px 14px; }
+    .nav-badge{ display:none !important; }
   }
 </style>
 </head>
@@ -556,15 +585,15 @@
       <button class="nav-btn active" data-view="dashboard" data-i18n-title="navDashboard">
         <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg></span>
         <span class="nav-label" data-i18n="navDashboard">Dashboard</span>
+        <span class="nav-badge" id="navAlertBadge" style="display:none;"></span>
       </button>
       <button class="nav-btn" data-view="database" data-i18n-title="navDatabase">
         <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.66 3.58 3 8 3s8-1.34 8-3V5"/><path d="M4 11v6c0 1.66 3.58 3 8 3s8-1.34 8-3v-6"/></svg></span>
         <span class="nav-label" data-i18n="navDatabase">Base de Datos</span>
       </button>
       <button class="nav-btn" data-view="config" data-i18n-title="navConfig">
-        <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
+        <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
         <span class="nav-label" data-i18n="navConfig">Configuración</span>
-        <span class="nav-badge" id="navAlertBadge" style="display:none;"></span>
       </button>
     </div>
     <div class="sidebar-spacer"></div>
@@ -842,6 +871,24 @@
   </div>
 </div>
 
+<!-- ===================== MODAL NOVEDADES ===================== -->
+<div class="overlay" id="whatsNewOverlay">
+  <div class="modal modal-narrow">
+    <div class="modal-head">
+      <h3 id="whatsNewTitle" data-i18n="whatsNewTitle">Novedades</h3>
+      <button class="btn-x" id="whatsNewCloseBtn" title="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="whatsnew-version" id="whatsNewVersion"></div>
+      <div id="whatsNewBody"></div>
+    </div>
+    <div class="modal-foot">
+      <span></span>
+      <button class="btn btn-primary" id="whatsNewOkBtn" data-i18n="whatsNewGotIt">Entendido</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===================== MODAL CANDIDATO ===================== -->
 <div class="overlay" id="overlay">
   <div class="modal">
@@ -1034,6 +1081,7 @@
       colClientSubmissionDate:"Envío a cliente", colClientFeedback:"Feedback cliente", colNotes:"Notas",
       colActions:"Acciones", rowHint:"Clic en una fila para editar el registro completo",
       newCandidateTitle:"Nuevo candidato", editCandidateTitle:"Editar candidato",
+      whatsNewTitle:"Novedades de esta versión", whatsNewGotIt:"Entendido",
       sectionPersonal:"Datos personales", lblFirstName:"Nombre *", lblLastName:"Apellido *",
       lblJobTitle:"Título profesional", phJobTitle:"ej. Analista de Finanzas Senior",
       lblEmail:"Mail", lblPhone:"Celular",
@@ -1149,6 +1197,7 @@
       colClientSubmissionDate:"Client submission", colClientFeedback:"Client feedback", colNotes:"Notes",
       colActions:"Actions", rowHint:"Click a row to edit the full record",
       newCandidateTitle:"New candidate", editCandidateTitle:"Edit candidate",
+      whatsNewTitle:"What's new in this version", whatsNewGotIt:"Got it",
       sectionPersonal:"Personal information", lblFirstName:"First name *", lblLastName:"Last name *",
       lblJobTitle:"Job title", phJobTitle:"e.g. Senior Financial Analyst",
       lblEmail:"Email", lblPhone:"Cellphone",
@@ -1338,7 +1387,33 @@
     "clientSubmissionDate","clientFeedback","notes"];
 
   // Versión del sistema — debe coincidir con CHANGELOG.md / README.md
-  const APP_VERSION = '1.5.0';
+  const APP_VERSION = '1.6.0';
+
+  // Notas de la versión actual, mostradas en el modal de novedades cuando
+  // el sistema detecta un cambio de versión. Mantener sincronizado con CHANGELOG.md.
+  const RELEASE_NOTES = {
+    version: APP_VERSION,
+    es: [
+      { title:"Nuevo", items:[
+        "Este aviso de novedades, que aparece automáticamente cuando el sistema se actualiza a una nueva versión.",
+        "Panel de \"Efectividad por fuente de contratación\" con valores centrados y más legibles."
+      ]},
+      { title:"Mejorado", items:[
+        "La impresión y exportación a PDF ahora conserva los colores y se distribuye en hojas A4 con márgenes, lista para imprimir.",
+        "El contador de seguimientos pendientes se movió al botón de Dashboard y se actualiza al registrar avances del candidato."
+      ]}
+    ],
+    en: [
+      { title:"New", items:[
+        "This what's-new notice, shown automatically whenever the system updates to a new version.",
+        "\"Hiring source effectiveness\" panel with centered, easier-to-read values."
+      ]},
+      { title:"Improved", items:[
+        "Printing and PDF export now keep colors and lay out across A4 pages with margins, ready to print.",
+        "The pending follow-ups counter moved to the Dashboard button and refreshes when you log candidate progress."
+      ]}
+    ]
+  };
 
   function cryptoId(){ return 'c'+Math.random().toString(36).slice(2,10)+Date.now().toString(36); }
 
@@ -1384,7 +1459,8 @@
     autoBackupIntervalMin:30,
     staleContactDays:14,
     staleStageDays:21,
-    lastBackupAt:null
+    lastBackupAt:null,
+    lastSeenVersion:null
   };
 
   let editingId = null;
@@ -1440,7 +1516,49 @@
     applySettingsToUI();
     setupAutoBackupTimer();
     renderAll();
+    maybeShowWhatsNew();
   }
+
+  // ---------- Modal de novedades ----------
+  function renderWhatsNew(){
+    document.getElementById('whatsNewVersion').textContent = `v${RELEASE_NOTES.version}`;
+    const groups = RELEASE_NOTES[currentLang] || RELEASE_NOTES.en;
+    document.getElementById('whatsNewBody').innerHTML = groups.map(g=>`
+      <div class="whatsnew-group">
+        <h4>${escapeHtml(g.title)}</h4>
+        <ul class="whatsnew-list">
+          ${g.items.map(it=>`<li>${escapeHtml(it)}</li>`).join('')}
+        </ul>
+      </div>
+    `).join('');
+  }
+  function openWhatsNew(){
+    renderWhatsNew();
+    document.getElementById('whatsNewOverlay').classList.add('active');
+  }
+  function closeWhatsNew(){
+    document.getElementById('whatsNewOverlay').classList.remove('active');
+    // Al cerrarlo, recién marca la versión como vista (y persiste).
+    settings.lastSeenVersion = APP_VERSION;
+    scheduleSave();
+  }
+  function maybeShowWhatsNew(){
+    // Muestra el modal solo si la versión vista difiere de la actual.
+    // En una instalación nueva (sin versión previa) no molesta: se marca
+    // como vista en silencio.
+    if(settings.lastSeenVersion === APP_VERSION) return;
+    if(settings.lastSeenVersion == null){
+      settings.lastSeenVersion = APP_VERSION;
+      scheduleSave();
+      return;
+    }
+    openWhatsNew();
+  }
+  document.getElementById('whatsNewCloseBtn').addEventListener('click', closeWhatsNew);
+  document.getElementById('whatsNewOkBtn').addEventListener('click', closeWhatsNew);
+  document.getElementById('whatsNewOverlay').addEventListener('click', (e)=>{
+    if(e.target===document.getElementById('whatsNewOverlay')) closeWhatsNew();
+  });
 
   function updateLastExportLine(){
     const dot = document.getElementById('lastExportDot');
@@ -1628,6 +1746,7 @@
   // Historial "de trabajo" mientras el modal está abierto. Se confirma
   // (se copia al candidato real) solo al presionar Guardar.
   let workingHistory = [];
+  let originalHistoryCount = 0;
   let editingHistoryEventId = null;
 
   function openModal(candidate){
@@ -1644,6 +1763,7 @@
     workingHistory = candidate && candidate.statusHistory
       ? candidate.statusHistory.map(ev=>({...ev}))
       : [];
+    originalHistoryCount = workingHistory.length;
     editingHistoryEventId = null;
     document.getElementById('historyNewDate').value = todayISO();
     document.getElementById('historyNewStatus').value = '';
@@ -1803,6 +1923,16 @@
       data[f]=v;
     });
     data.statusHistory = workingHistory.map(ev=>({...ev}));
+    // Si se registraron nuevos eventos en el historial, eso cuenta como
+    // actividad/contacto reciente: actualiza "Último contacto" a la fecha
+    // del evento más reciente (si es posterior), para que las alertas de
+    // "sin contacto" se resuelvan al registrar avances del proceso.
+    if(workingHistory.length > originalHistoryCount){
+      const latestDate = sortedHistoryArray(workingHistory).slice(-1)[0]?.date;
+      if(latestDate && (!data.lastContact || data.lastContact < latestDate)){
+        data.lastContact = latestDate;
+      }
+    }
     if(data.recruiter && !recruiters.includes(data.recruiter)) recruiters.push(data.recruiter);
     if(data.client && !clients.includes(data.client)) clients.push(data.client);
     let target;
@@ -2445,17 +2575,17 @@
       <table class="mini">
         <thead><tr>
           <th>${t('colSource')}</th>
-          <th>${t('colCandidates')}</th>
-          <th>${t('colHired')}</th>
-          <th>${t('colHireRate')}</th>
+          <th style="text-align:center">${t('colCandidates')}</th>
+          <th style="text-align:center">${t('colHired')}</th>
+          <th style="text-align:center">${t('colHireRate')}</th>
         </tr></thead>
         <tbody>
           ${rows.map(r=>`
             <tr>
               <td>${escapeHtml(r.src)}</td>
-              <td style="font-family:var(--mono)">${r.total}</td>
-              <td style="font-family:var(--mono);color:var(--ok);font-weight:600">${r.hired}</td>
-              <td style="font-family:var(--mono);color:var(--ink-soft)">${r.rate}%</td>
+              <td style="font-family:var(--mono);text-align:center">${r.total}</td>
+              <td style="font-family:var(--mono);text-align:center;color:var(--ok);font-weight:600">${r.hired}</td>
+              <td style="font-family:var(--mono);text-align:center;color:var(--ink-soft)">${r.rate}%</td>
             </tr>
           `).join('')}
         </tbody>

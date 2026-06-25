@@ -4,6 +4,16 @@ Todos los cambios relevantes de este proyecto se documentan en este archivo.
 
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y el proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.6.0] - 2026-06-24
+
+### Agregado
+- Aviso de novedades: un modal que aparece automáticamente cuando el sistema se actualiza a una nueva versión, resumiendo los cambios.
+
+### Cambiado
+- La impresión y exportación a PDF ahora conserva los colores del dashboard y distribuye el contenido en hojas A4 con márgenes laterales y superiores, lista para imprimir.
+- El contador de seguimientos pendientes se movió del botón de Configuración al de Dashboard, y ahora se actualiza correctamente al registrar avances en el historial de un candidato (la alerta de "sin contacto" se resuelve al registrar actividad).
+- Los valores numéricos de la tabla "Efectividad por fuente de contratación" quedaron centrados para mejor lectura.
+
 ## [1.5.0] - 2026-06-24
 
 ### Agregado
