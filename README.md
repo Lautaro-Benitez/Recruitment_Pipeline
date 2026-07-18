@@ -1,8 +1,13 @@
 # Pipeline de Reclutamiento
 
-[![Version](https://img.shields.io/badge/version-1.6.0-blue)](CHANGELOG.md)
-[![License](https://img.shields.io/badge/license-MIT-lightgrey)](LICENSE)
-[![Stack](https://img.shields.io/badge/stack-HTML%20%2B%20CSS%20%2B%20JS-informational)](#stack-técnico)
+[![Version](https://img.shields.io/badge/version-2.0.0-blue)](CHANGELOG.md)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+![Windows](https://img.shields.io/badge/Windows-supported-blue?style=flat&logo=windows&logoColor=white)
+![macOS](https://img.shields.io/badge/macOS-supported-blue?style=flat&logo=apple&logoColor=white)
+![Linux](https://img.shields.io/badge/Linux-supported-blue?style=flat&logo=linux&logoColor=white)
+[![JavaScript](https://img.shields.io/badge/JavaScript-Vanilla-F7DF1E?style=flat&logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
+[![HTML5](https://img.shields.io/badge/HTML5-Vanilla-E34F26?style=flat&logo=html5&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/HTML)
+[![CSS3](https://img.shields.io/badge/CSS3-Vanilla-1572B6?style=flat&logo=css3&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/CSS)
 [![Backend](https://img.shields.io/badge/backend-none-lightgrey)](#stack-técnico)
 
 Herramienta de pipeline de reclutamiento de un solo archivo HTML, pensada para que una persona reclutadora tenga una base de candidatos precisa, filtrable, y un dashboard de métricas para reportar a su superior — sin instalar nada ni depender de un servidor.
@@ -102,14 +107,14 @@ El selector ES / EN, ubicado en la esquina superior derecha, traduce toda la int
 
 ## Respaldo y persistencia de datos
 
-Esta herramienta es 100% client-side: no hay servidor ni base de datos externa. Para evitar pérdida de información:
+Esta herramienta es 100% client-side: no hay servidor ni base de datos externa. El guardado funciona como en un programa de escritorio:
 
-- **Persistencia local**: cada cambio se guarda automáticamente en el almacenamiento del navegador. Cerrar o recargar la pestaña no borra los datos.
-- **Exportación manual**: botón "Exportar CSV ahora" en Configuración, disponible en cualquier momento.
-- **Respaldo automático**: se puede activar una descarga periódica de CSV con un intervalo (en minutos) definido por la persona usuaria. El archivo se descarga a la carpeta de Descargas del navegador.
-- **Importación**: permite restaurar o fusionar candidatos desde un CSV exportado previamente.
-
-> **Nota sobre Google Drive:** no existe una forma de escribir directamente en Google Drive desde una página HTML sin autenticación OAuth contra la API de Drive. Si la carpeta de Descargas del navegador está sincronizada con Drive (por ejemplo, con Google Drive para escritorio), los respaldos automáticos van a aparecer ahí sin pasos adicionales — pero esa sincronización debe configurarse del lado del sistema operativo, no desde la herramienta.
+- **Archivo principal**: desde Configuración → Guardado, elegís una vez dónde guardar el pipeline (`.json`). A partir de ahí, "Guardar" reescribe ese mismo archivo, "Guardar como..." crea uno nuevo o guarda una copia, y "Abrir..." carga un archivo `.json` guardado previamente.
+- **Guardado automático**: activado por defecto. Los cambios se guardan al archivo conectado unos segundos después de cada edición, y además hay un guardado periódico de referencia (intervalo configurable) para sesiones largas e inactivas.
+- **Compatibilidad de navegadores**: el guardado directo a un archivo elegido usa la File System Access API, soportada en Chrome, Edge y navegadores basados en Chromium. En navegadores que no la soportan (Firefox, Safari), la herramienta cae automáticamente a un modo de compatibilidad: "Guardar" descarga el `.json` a la carpeta de Descargas cada vez, y "Abrir" usa el selector de archivos tradicional. La funcionalidad es la misma; solo cambia si hace falta volver a elegir el archivo en cada guardado.
+- **Red de seguridad local**: además del archivo, cada cambio se guarda también como copia de emergencia en el propio navegador (IndexedDB). Si se cierra la pestaña sin haber guardado a un archivo, esa copia se recupera automáticamente al volver a abrir la herramienta — así nunca se pierde el trabajo en curso, aunque lo ideal siga siendo tener un archivo `.json` conectado.
+- **Reconexión**: los navegadores pueden pedir reconfirmar el permiso de escritura sobre el archivo conectado (por ejemplo tras reiniciar el navegador). Cuando eso pasa, aparece un aviso con un botón "Reconectar" — un clic y se retoma el guardado normal.
+- **Exportación / importación CSV**: aparte del archivo principal, sigue disponible exportar/importar CSV desde Configuración, pensado para compartir datos puntuales o abrirlos en Excel — no reemplaza al archivo de guardado principal.
 
 ---
 
@@ -136,8 +141,8 @@ Ambas listas alimentan los menús desplegables del formulario de candidato y los
 
 ## Limitaciones conocidas
 
-- Los datos viven en el navegador donde se usa la herramienta; no se sincronizan automáticamente entre dispositivos ni entre personas usuarias.
-- El respaldo automático no permite elegir carpeta de destino (restricción de seguridad de los navegadores): siempre va a la carpeta de Descargas configurada.
+- Los datos viven en el archivo `.json` que cada persona usuaria elige guardar en su computadora; no se sincronizan automáticamente entre dispositivos ni entre personas usuarias.
+- En Firefox y Safari (sin soporte de File System Access API), "Guardar" descarga una copia nueva cada vez en vez de reescribir un único archivo — no es una limitación del guardado en sí, solo cambia el paso manual de reemplazar el archivo anterior con el descargado.
 - No hay control de usuarios ni permisos: cualquier persona con acceso al archivo puede ver y editar todos los datos.
 
 ---

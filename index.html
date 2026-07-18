@@ -149,6 +149,7 @@
     margin-bottom:18px;gap:14px;
   }
   .lang-switch{display:flex;gap:2px;background:var(--gray-150);padding:3px;border-radius:99px;flex:0 0 auto;}
+  .topbar-right{display:flex;align-items:center;gap:10px;flex:0 0 auto;}
   .lang-btn{
     border:none;background:transparent;padding:6px 13px;border-radius:99px;
     font-size:12px;font-weight:700;color:var(--ink-soft);cursor:pointer;letter-spacing:.02em;
@@ -351,6 +352,7 @@
     padding:20px 22px;box-shadow:var(--shadow-sm);
   }
   .config-card.config-card-danger{border-color:var(--bad-soft);}
+  .config-card.config-card-wide{grid-column:1/-1;}
   .config-card h3{font-size:14px;font-weight:700;margin:0 0 4px;color:var(--gray-800);}
   .config-card .config-desc{font-size:12.5px;color:var(--ink-soft);margin:0 0 16px;}
   .config-row{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
@@ -398,6 +400,70 @@
     box-shadow:0 20px 50px rgba(24,24,27,.22);
   }
   .modal.modal-narrow{max-width:520px;}
+
+  /* ---------- Toasts ---------- */
+  .toast-container{
+    position:fixed;right:18px;bottom:18px;z-index:200;
+    display:flex;flex-direction:column;gap:8px;max-width:360px;
+  }
+  .toast{
+    display:flex;align-items:flex-start;gap:10px;
+    background:var(--gray-900);color:#fff;border-radius:9px;
+    padding:12px 14px;box-shadow:0 10px 30px rgba(24,24,27,.28);
+    font-size:12.5px;line-height:1.4;
+    opacity:0;transform:translateY(8px);transition:opacity .18s ease, transform .18s ease;
+  }
+  .toast.show{opacity:1;transform:translateY(0);}
+  .toast-icon{
+    flex:0 0 18px;width:18px;height:18px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;
+    background:var(--gray-700);
+  }
+  .toast-success .toast-icon{background:var(--ok);}
+  .toast-error .toast-icon{background:var(--bad);}
+  .toast-warning .toast-icon{background:var(--warn);}
+  .toast-info .toast-icon{background:var(--accent);}
+  .toast-msg{flex:1;padding-top:1px;}
+  .toast-close{
+    flex:0 0 auto;background:none;border:none;color:rgba(255,255,255,.6);
+    cursor:pointer;font-size:14px;line-height:1;padding:0;
+  }
+  .toast-close:hover{color:#fff;}
+
+  /* ---------- Save status indicator (topbar) ---------- */
+  .save-indicator{
+    display:flex;align-items:center;gap:7px;font-size:12px;color:var(--gray-500);
+    padding:6px 12px;border-radius:99px;background:var(--gray-100);flex:0 0 auto;white-space:nowrap;
+  }
+  .save-dot{width:7px;height:7px;border-radius:50%;background:var(--gray-400);flex:0 0 auto;}
+  .save-dot.saved{background:var(--ok);}
+  .save-dot.saving{background:var(--accent);animation:saveDotPulse 1s ease-in-out infinite;}
+  .save-dot.unsaved{background:var(--warn);}
+  .save-dot.error{background:var(--bad);}
+  @keyframes saveDotPulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+
+  /* ---------- Inline banner (reconnect, warnings) ---------- */
+  .inline-banner{
+    display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap;
+    background:var(--warn-soft);border:1px solid #f3d99a;color:var(--warn);
+    border-radius:8px;padding:9px 12px;font-size:12.5px;margin-bottom:12px;
+  }
+  .inline-banner strong{font-weight:700;}
+
+  /* ---------- Save system card ---------- */
+  .save-file-row{
+    display:flex;align-items:center;gap:10px;
+    background:var(--gray-50);border:1px solid var(--line);border-radius:8px;
+    padding:10px 12px;margin-bottom:12px;
+  }
+  .save-file-icon{
+    flex:0 0 32px;width:32px;height:32px;border-radius:7px;background:var(--accent-soft);color:var(--accent);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .save-file-icon svg{width:16px;height:16px;}
+  .save-file-info{min-width:0;flex:1;}
+  .save-file-name{font-size:13px;font-weight:600;color:var(--gray-800);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .save-file-sub{font-size:11px;color:var(--ink-soft);}
   .whatsnew-version{
     display:inline-block;font-family:var(--mono);font-size:11px;font-weight:700;
     color:var(--accent);background:var(--accent-soft);border-radius:99px;padding:3px 10px;margin-bottom:14px;
@@ -608,9 +674,15 @@
           <h2 data-i18n="navDashboard">Dashboard</h2>
           <p data-i18n="dashSubtitle">Métricas del pipeline en base a los filtros seleccionados</p>
         </div>
-        <div class="lang-switch">
-          <button class="lang-btn" data-lang="es">ES</button>
-          <button class="lang-btn" data-lang="en">EN</button>
+        <div class="topbar-right">
+          <div class="save-indicator" id="topSaveIndicator" title="">
+            <span class="save-dot" id="topSaveDot"></span>
+            <span id="topSaveText">—</span>
+          </div>
+          <div class="lang-switch">
+            <button class="lang-btn" data-lang="es">ES</button>
+            <button class="lang-btn" data-lang="en">EN</button>
+          </div>
         </div>
       </div>
 
@@ -771,26 +843,50 @@
             <p data-i18n="cfgGroupDataDesc">Respaldo, exportación e importación de la base de datos.</p>
           </div>
           <div class="config-grid">
-            <div class="config-card">
-              <h3 data-i18n="backupTitle">Respaldo automático (CSV)</h3>
-              <p class="config-desc" data-i18n="backupDesc">Descarga periódica de un CSV con todos los candidatos. El archivo se guarda en la carpeta de Descargas de tu navegador — si esa carpeta está sincronizada con Google Drive, el respaldo queda disponible ahí también.</p>
+            <div class="config-card config-card-wide">
+              <h3 data-i18n="saveSystemTitle">Guardado</h3>
+              <p class="config-desc" data-i18n="saveSystemDesc">El pipeline se guarda en un archivo en tu computadora, como en un programa de escritorio. Elegí dónde guardarlo una vez y la app lo va a mantener actualizado sola.</p>
+
+              <div class="save-file-row">
+                <div class="save-file-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+                </div>
+                <div class="save-file-info">
+                  <div class="save-file-name" id="connectedFileName" data-i18n="noFileConnected">Ningún archivo conectado todavía</div>
+                  <div class="save-file-sub" id="connectedFileSub" data-i18n="noFileConnectedSub">Usá "Guardar como..." para elegir dónde guardar</div>
+                </div>
+              </div>
+
+              <div class="inline-banner" id="reconnectBanner" style="display:none;">
+                <span data-i18n="reconnectNeeded">Se perdió el acceso al archivo conectado.</span>
+                <button class="btn btn-sm" id="reconnectBtn" data-i18n="reconnectBtn">Reconectar</button>
+              </div>
+
               <div class="config-row">
-                <label data-i18n="backupEnableLabel">Activar respaldo automático</label>
+                <button class="btn btn-primary" id="saveNowBtn" data-i18n="saveNowBtn">Guardar</button>
+                <button class="btn" id="saveAsBtn" data-i18n="saveAsBtn">Guardar como...</button>
+                <button class="btn" id="openFileBtn" data-i18n="openFileBtn">Abrir...</button>
+                <input type="file" id="fileOpenJsonInput" accept=".json" style="display:none;">
+              </div>
+
+              <div class="config-row">
+                <label data-i18n="backupEnableLabel">Guardado automático</label>
                 <div class="toggle" id="autoBackupToggle"><div class="knob"></div></div>
               </div>
               <div class="config-row">
                 <label data-i18n="backupIntervalLabel">Intervalo (minutos)</label>
-                <input type="number" id="autoBackupInterval" min="1" max="1440" value="30">
+                <input type="number" id="autoBackupInterval" min="1" max="1440" value="5">
               </div>
+
               <div class="status-line">
-                <span class="status-dot off" id="backupStatusDot"></span>
-                <span id="backupStatusText" data-i18n="backupStatusOff">Respaldo automático desactivado</span>
+                <span class="save-dot off" id="saveStatusDot"></span>
+                <span id="saveStatusText">—</span>
               </div>
             </div>
 
             <div class="config-card">
-              <h3 data-i18n="manualBackupTitle">Exportar / Importar manual</h3>
-              <p class="config-desc" data-i18n="manualBackupDesc">Descargá un CSV en cualquier momento, o restaurá el pipeline desde un archivo exportado previamente.</p>
+              <h3 data-i18n="manualBackupTitle">Exportar / Importar CSV</h3>
+              <p class="config-desc" data-i18n="manualBackupDesc">Para compartir con otras personas o abrir en Excel. No reemplaza el guardado del archivo principal de arriba.</p>
               <div class="config-row">
                 <button class="btn btn-primary" id="exportCsvBtn" data-i18n="exportCsvNow">Exportar CSV ahora</button>
                 <button class="btn" id="importCsvBtn" data-i18n="importCsv">Importar CSV</button>
@@ -870,6 +966,49 @@
     </footer>
   </div>
 </div>
+
+<!-- ===================== MODAL CONFIRMAR ABRIR ===================== -->
+<div class="overlay" id="confirmOpenOverlay">
+  <div class="modal modal-narrow">
+    <div class="modal-head">
+      <h3 data-i18n="confirmOpenTitle">Tenés cambios sin guardar</h3>
+      <button class="btn-x" id="confirmOpenXBtn" title="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <p style="margin:0;font-size:13.5px;color:var(--gray-700);line-height:1.5;" data-i18n="confirmOpenMsg">Si abrís otro archivo ahora, los cambios sin guardar de este pipeline se van a perder. ¿Qué querés hacer?</p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" id="confirmOpenCancelBtn" data-i18n="cancelBtn">Cancelar</button>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-danger" id="confirmOpenDiscardBtn" data-i18n="confirmOpenDiscard">Descartar y abrir</button>
+        <button class="btn btn-primary" id="confirmOpenSaveBtn" data-i18n="confirmOpenSaveFirst">Guardar y abrir</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL ERROR ===================== -->
+<div class="overlay" id="errorModalOverlay">
+  <div class="modal modal-narrow">
+    <div class="modal-head">
+      <h3 id="errorModalTitleText" data-i18n="errorGenericTitle">Ocurrió un error</h3>
+      <button class="btn-x" id="errorModalXBtn" title="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <p id="errorModalMessageText" style="margin:0 0 10px;font-size:13.5px;color:var(--gray-700);line-height:1.5;"></p>
+      <details>
+        <summary style="cursor:pointer;font-size:11.5px;color:var(--ink-soft);" data-i18n="errorModalDetailToggle">Detalle técnico</summary>
+        <pre id="errorModalDetailText" style="white-space:pre-wrap;font-size:11px;color:var(--gray-500);background:var(--gray-50);border-radius:6px;padding:8px;margin-top:6px;max-height:160px;overflow:auto;"></pre>
+      </details>
+    </div>
+    <div class="modal-foot">
+      <span></span>
+      <button class="btn btn-primary" id="errorModalCloseBtn" data-i18n="errorModalClose">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
 
 <!-- ===================== MODAL NOVEDADES ===================== -->
 <div class="overlay" id="whatsNewOverlay">
@@ -1136,13 +1275,50 @@
       deleteInUseWarning:"Este reclutador/a tiene candidatos asignados. ¿Eliminar igual? Los registros quedarán sin reclutador/a asignado.",
       deleteClientInUseWarning:"Este cliente tiene candidatos asignados. ¿Eliminar igual? Los registros quedarán sin cliente asignado.",
       noDataLabel:"— sin dato —",
-      backupTitle:"Respaldo automático (CSV)",
-      backupDesc:"Descarga periódica de un CSV con todos los candidatos. El archivo se guarda en la carpeta de Descargas de tu navegador — si esa carpeta está sincronizada con Google Drive, el respaldo queda disponible ahí también.",
-      backupEnableLabel:"Activar respaldo automático", backupIntervalLabel:"Intervalo (minutos)",
-      backupStatusOff:"Respaldo automático desactivado",
-      backupStatusOn:(min)=>`Activo — próxima descarga en hasta ${min} min`,
-      lastBackup:(time)=>`Último respaldo descargado: ${time}`, neverBackedUp:"Todavía no se descargó ningún respaldo",
+      saveSystemTitle:"Guardado",
+      saveSystemDesc:"El pipeline se guarda en un archivo en tu computadora, como en un programa de escritorio. Elegí dónde guardarlo una vez y la app lo va a mantener actualizado sola.",
+      noFileConnected:"Ningún archivo conectado todavía",
+      noFileConnectedSub:"Usá \"Guardar como...\" para elegir dónde guardar",
+      fileConnectedSub:"Conectado — se guarda solo en este archivo",
+      fileConnectedSubFallback:"Se descarga a Descargas cada vez que guardás (tu navegador no permite guardar directo a carpeta)",
+      reconnectNeeded:"Se perdió el acceso al archivo conectado.",
+      reconnectBtn:"Reconectar",
+      saveNowBtn:"Guardar", saveAsBtn:"Guardar como...", openFileBtn:"Abrir...",
+      backupEnableLabel:"Guardado automático", backupIntervalLabel:"Intervalo (minutos)",
       lastExport:(time)=>`Última exportación: ${time}`, neverExported:"Todavía no se exportó ningún archivo",
+
+      // ---- Sistema de guardado: estados, toasts, modales de error ----
+      saveStateIdle:"Sin datos guardados todavía",
+      saveStateSaving:"Guardando…",
+      saveStateSaved:(time,name)=>`Guardado ${time}`,
+      saveStateSavedNoName:(time)=>`Guardado ${time}`,
+      saveStateDownloaded:(name)=>`Descargado como ${name}`,
+      saveStateUnsaved:"Cambios sin guardar",
+      saveStateNoFile:"Sin archivo conectado — guardá para elegir uno",
+      saveStateDisconnected:"Se perdió el acceso al archivo — reconectá",
+      saveStateError:"Error al guardar",
+      confirmOpenTitle:"Tenés cambios sin guardar",
+      confirmOpenMsg:"Si abrís otro archivo ahora, los cambios sin guardar de este pipeline se van a perder. ¿Qué querés hacer?",
+      confirmOpenDiscard:"Descartar y abrir", confirmOpenSaveFirst:"Guardar y abrir",
+      errorGenericTitle:"Ocurrió un error",
+      errorModalDetailToggle:"Detalle técnico", errorModalClose:"Cerrar",
+      errorSaveTitle:"No se pudo guardar", errorSaveMsg:"Hubo un problema al guardar el archivo. Tus datos siguen en pantalla; probá guardar de nuevo o usá \"Guardar como...\" para elegir otro archivo.",
+      errorSaveAsTitle:"No se pudo elegir el archivo", errorSaveAsMsg:"No se pudo crear o abrir el archivo elegido para guardar. Probá de nuevo.",
+      errorOpenTitle:"No se pudo abrir el archivo", errorOpenMsg:"Hubo un problema al abrir el archivo elegido. Probá de nuevo.",
+      errorOpenParseTitle:"El archivo está dañado", errorOpenParseMsg:"El archivo elegido no es un JSON válido de esta aplicación. Verificá que sea el archivo correcto.",
+      errorOpenFormatTitle:"Formato no reconocido", errorOpenFormatMsg:"El archivo se pudo leer pero no tiene la estructura esperada de un pipeline. Verificá que sea el archivo correcto.",
+      errorReconnectTitle:"No se pudo reconectar", errorReconnectMsg:"No se pudo recuperar el acceso al archivo. Probá con \"Guardar como...\" para elegir un archivo nuevo.",
+      toastSaved:(name)=>`Guardado en ${name}`,
+      toastDownloaded:(name)=>`Descargado como ${name}`,
+      toastOpened:(name)=>`Se abrió ${name}`,
+      toastReconnected:(name)=>`Reconectado a ${name}`,
+      toastReconnectNeeded:"Se perdió el acceso al archivo. Los cambios se guardan localmente hasta que reconectes.",
+      toastNoFileToReconnect:"No hay ningún archivo previo para reconectar.",
+      toastPermissionDenied:"No se concedió permiso para acceder al archivo.",
+      toastAutoSaveFailed:"El guardado automático falló. Tus datos siguen en pantalla.",
+      toastFallbackMode:"Tu navegador no permite guardar directo a una carpeta. Vas a poder guardar igual, descargando el archivo cada vez (funciona mejor en Chrome o Edge).",
+      toastDbReset:"Base de datos restaurada.",
+      toastDbResetWithFile:(name)=>`Base de datos restaurada. Esto también se va a guardar en ${name}.`,
       manualBackupTitle:"Exportar / Importar manual",
       manualBackupDesc:"Descargá un CSV en cualquier momento, o restaurá el pipeline desde un archivo exportado previamente.",
       exportCsvNow:"Exportar CSV ahora", importCsv:"Importar CSV",
@@ -1252,13 +1428,50 @@
       deleteInUseWarning:"This recruiter has candidates assigned. Delete anyway? Those records will be left without a recruiter.",
       deleteClientInUseWarning:"This client has candidates assigned. Delete anyway? Those records will be left without a client.",
       noDataLabel:"— no data —",
-      backupTitle:"Automatic backup (CSV)",
-      backupDesc:"Periodic download of a CSV with all candidates. The file is saved to your browser's Downloads folder — if that folder is synced with Google Drive, the backup will also be available there.",
-      backupEnableLabel:"Enable automatic backup", backupIntervalLabel:"Interval (minutes)",
-      backupStatusOff:"Automatic backup disabled",
-      backupStatusOn:(min)=>`Active — next download within ${min} min`,
-      lastBackup:(time)=>`Last backup downloaded: ${time}`, neverBackedUp:"No backup downloaded yet",
+      saveSystemTitle:"Saving",
+      saveSystemDesc:"The pipeline is saved to a file on your computer, like a desktop program. Pick where to save it once and the app will keep that file up to date on its own.",
+      noFileConnected:"No file connected yet",
+      noFileConnectedSub:"Use \"Save as...\" to choose where to save",
+      fileConnectedSub:"Connected — saving directly to this file",
+      fileConnectedSubFallback:"Downloaded to your Downloads folder each time you save (your browser doesn't allow saving straight to a folder)",
+      reconnectNeeded:"Access to the connected file was lost.",
+      reconnectBtn:"Reconnect",
+      saveNowBtn:"Save", saveAsBtn:"Save as...", openFileBtn:"Open...",
+      backupEnableLabel:"Automatic saving", backupIntervalLabel:"Interval (minutes)",
       lastExport:(time)=>`Last export: ${time}`, neverExported:"No file exported yet",
+
+      // ---- Save system: states, toasts, error modals ----
+      saveStateIdle:"No data saved yet",
+      saveStateSaving:"Saving…",
+      saveStateSaved:(time,name)=>`Saved ${time}`,
+      saveStateSavedNoName:(time)=>`Saved ${time}`,
+      saveStateDownloaded:(name)=>`Downloaded as ${name}`,
+      saveStateUnsaved:"Unsaved changes",
+      saveStateNoFile:"No file connected — save to pick one",
+      saveStateDisconnected:"File access lost — reconnect",
+      saveStateError:"Save error",
+      confirmOpenTitle:"You have unsaved changes",
+      confirmOpenMsg:"If you open another file now, the unsaved changes in this pipeline will be lost. What do you want to do?",
+      confirmOpenDiscard:"Discard and open", confirmOpenSaveFirst:"Save and open",
+      errorGenericTitle:"An error occurred",
+      errorModalDetailToggle:"Technical detail", errorModalClose:"Close",
+      errorSaveTitle:"Couldn't save", errorSaveMsg:"There was a problem saving the file. Your data is still on screen; try saving again or use \"Save as...\" to pick another file.",
+      errorSaveAsTitle:"Couldn't pick the file", errorSaveAsMsg:"The chosen file couldn't be created or opened for saving. Please try again.",
+      errorOpenTitle:"Couldn't open the file", errorOpenMsg:"There was a problem opening the chosen file. Please try again.",
+      errorOpenParseTitle:"The file is damaged", errorOpenParseMsg:"The chosen file isn't a valid JSON file for this app. Check that it's the right file.",
+      errorOpenFormatTitle:"Unrecognized format", errorOpenFormatMsg:"The file could be read but doesn't have the expected pipeline structure. Check that it's the right file.",
+      errorReconnectTitle:"Couldn't reconnect", errorReconnectMsg:"Access to the file couldn't be recovered. Try \"Save as...\" to pick a new file.",
+      toastSaved:(name)=>`Saved to ${name}`,
+      toastDownloaded:(name)=>`Downloaded as ${name}`,
+      toastOpened:(name)=>`Opened ${name}`,
+      toastReconnected:(name)=>`Reconnected to ${name}`,
+      toastReconnectNeeded:"Access to the file was lost. Changes are being saved locally until you reconnect.",
+      toastNoFileToReconnect:"There's no previous file to reconnect to.",
+      toastPermissionDenied:"Permission to access the file wasn't granted.",
+      toastAutoSaveFailed:"Automatic save failed. Your data is still on screen.",
+      toastFallbackMode:"Your browser doesn't support saving directly to a folder. You can still save by downloading the file each time (works best in Chrome or Edge).",
+      toastDbReset:"Database reset.",
+      toastDbResetWithFile:(name)=>`Database reset. This will also be saved to ${name}.`,
       manualBackupTitle:"Manual export / import",
       manualBackupDesc:"Download a CSV at any time, or restore the pipeline from a previously exported file.",
       exportCsvNow:"Export CSV now", importCsv:"Import CSV",
@@ -1310,7 +1523,8 @@
       currentLang = btn.dataset.lang;
       document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active', b===btn));
       applyStaticTranslations();
-      updateBackupStatusLine();
+      setSaveState(isDirty ? (fileHandle || !FS_SUPPORTED ? 'unsaved' : 'unsaved-nofile') : (connectedFileName ? 'saved' : 'idle'));
+      updateConnectedFileDisplay();
       updateLastExportLine();
       renderAll();
     });
@@ -1387,7 +1601,7 @@
     "clientSubmissionDate","clientFeedback","notes"];
 
   // Versión del sistema — debe coincidir con CHANGELOG.md / README.md
-  const APP_VERSION = '1.6.0';
+  const APP_VERSION = '2.0.0';
 
   // Notas de la versión actual, mostradas en el modal de novedades cuando
   // el sistema detecta un cambio de versión. Mantener sincronizado con CHANGELOG.md.
@@ -1395,22 +1609,24 @@
     version: APP_VERSION,
     es: [
       { title:"Nuevo", items:[
-        "Este aviso de novedades, que aparece automáticamente cuando el sistema se actualiza a una nueva versión.",
-        "Panel de \"Efectividad por fuente de contratación\" con valores centrados y más legibles."
+        "Sistema de guardado en archivo: elegí una carpeta y un nombre una sola vez, y la app mantiene ese archivo actualizado sola (como Guardar/Guardar como/Abrir de un programa de escritorio).",
+        "Avisos (toasts) y ventanas de error claras si algo falla al guardar o abrir un archivo.",
+        "Indicador de estado de guardado siempre visible arriba a la derecha."
       ]},
       { title:"Mejorado", items:[
-        "La impresión y exportación a PDF ahora conserva los colores y se distribuye en hojas A4 con márgenes, lista para imprimir.",
-        "El contador de seguimientos pendientes se movió al botón de Dashboard y se actualiza al registrar avances del candidato."
+        "Si tu navegador no soporta el guardado directo a carpeta, la app cae automáticamente a un modo de descarga manual seguro, sin perder funcionalidad.",
+        "La app avisa antes de cerrar la pestaña si hay cambios sin guardar."
       ]}
     ],
     en: [
       { title:"New", items:[
-        "This what's-new notice, shown automatically whenever the system updates to a new version.",
-        "\"Hiring source effectiveness\" panel with centered, easier-to-read values."
+        "File-based save system: pick a folder and a name once, and the app keeps that file updated on its own (like Save/Save as/Open in a desktop program).",
+        "Clear toasts and error dialogs if saving or opening a file fails.",
+        "Always-visible save status indicator in the top right."
       ]},
       { title:"Improved", items:[
-        "Printing and PDF export now keep colors and lay out across A4 pages with margins, ready to print.",
-        "The pending follow-ups counter moved to the Dashboard button and refreshes when you log candidate progress."
+        "If your browser doesn't support direct folder saving, the app automatically falls back to a safe manual download mode without losing functionality.",
+        "The app warns before closing the tab if there are unsaved changes."
       ]}
     ]
   };
@@ -1455,8 +1671,8 @@
 
 
   let settings = {
-    autoBackupEnabled:false,
-    autoBackupIntervalMin:30,
+    autoBackupEnabled:true,
+    autoBackupIntervalMin:5,
     staleContactDays:14,
     staleStageDays:21,
     lastBackupAt:null,
@@ -1476,47 +1692,503 @@
   }
 
   // ======================================================================
-  // PERSISTENCE (browser-local, via window.storage)
+  // TOASTS
   // ======================================================================
-  const STORAGE_KEY = 'pipeline-data-v1';
-  let saveTimer = null;
-  let storageAvailable = (typeof window !== 'undefined' && window.storage);
-
-  function scheduleSave(){
-    if(!storageAvailable) return;
-    clearTimeout(saveTimer);
-    saveTimer = setTimeout(doSave, 600);
+  function showToast(message, type, opts){
+    type = type || 'info';
+    opts = opts || {};
+    const container = document.getElementById('toastContainer');
+    if(!container) return null;
+    const el = document.createElement('div');
+    el.className = `toast toast-${type}`;
+    const iconTxt = {success:'✓', error:'!', warning:'!', info:'i'}[type] || 'i';
+    const iconSpan = document.createElement('span');
+    iconSpan.className = 'toast-icon';
+    iconSpan.textContent = iconTxt;
+    const msgSpan = document.createElement('span');
+    msgSpan.className = 'toast-msg';
+    msgSpan.textContent = message;
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'toast-close';
+    closeBtn.setAttribute('aria-label', 'Cerrar');
+    closeBtn.innerHTML = '&times;';
+    el.appendChild(iconSpan); el.appendChild(msgSpan); el.appendChild(closeBtn);
+    container.appendChild(el);
+    (window.requestAnimationFrame || (fn=>setTimeout(fn,16)))(()=>el.classList.add('show'));
+    const duration = opts.duration != null ? opts.duration : (type==='error' ? 7000 : 4000);
+    let timer = null;
+    const remove = ()=>{
+      el.classList.remove('show');
+      setTimeout(()=>{ if(el.parentNode) el.parentNode.removeChild(el); }, 200);
+    };
+    if(duration > 0) timer = setTimeout(remove, duration);
+    closeBtn.addEventListener('click', ()=>{ if(timer) clearTimeout(timer); remove(); });
+    return el;
   }
 
-  async function doSave(){
-    if(!storageAvailable) return;
+  // ======================================================================
+  // MODAL DE ERROR
+  // ======================================================================
+  function reportError(title, message, err){
+    try{ console.error(title, err); }catch(e){}
+    const titleEl = document.getElementById('errorModalTitleText');
+    const msgEl = document.getElementById('errorModalMessageText');
+    const detailEl = document.getElementById('errorModalDetailText');
+    if(titleEl) titleEl.textContent = title;
+    if(msgEl) msgEl.textContent = message;
+    if(detailEl){
+      const detail = (err && (err.stack || err.message)) || (err ? String(err) : '');
+      detailEl.textContent = detail;
+    }
+    const overlay = document.getElementById('errorModalOverlay');
+    if(overlay) overlay.classList.add('active');
+    showToast(message, 'error');
+  }
+  document.getElementById('errorModalCloseBtn').addEventListener('click', ()=>{
+    document.getElementById('errorModalOverlay').classList.remove('active');
+  });
+  document.getElementById('errorModalXBtn').addEventListener('click', ()=>{
+    document.getElementById('errorModalOverlay').classList.remove('active');
+  });
+  document.getElementById('errorModalOverlay').addEventListener('click', (e)=>{
+    if(e.target===document.getElementById('errorModalOverlay')) document.getElementById('errorModalOverlay').classList.remove('active');
+  });
+
+  // ======================================================================
+  // INDEXEDDB — almacén local de respaldo (handle del archivo + snapshot)
+  // ======================================================================
+  // Este almacén NUNCA es la fuente principal de datos: es una red de
+  // seguridad para (a) recordar qué archivo estaba conectado entre
+  // sesiones, y (b) tener una copia de emergencia si el archivo real no
+  // se puede leer/escribir en algún momento. La fuente de verdad es
+  // siempre el archivo que el usuario eligió con "Guardar como...".
+  const IDB_NAME = 'pipeline_app_store';
+  const IDB_STORE = 'kv';
+  const IDB_KEY_HANDLE = 'lastFileHandle';
+  const IDB_KEY_FILENAME = 'lastFileName';
+  const IDB_KEY_SNAPSHOT = 'lastSnapshot';
+  let idbUnavailable = false;
+
+  function idbOpen(){
+    return new Promise((resolve, reject)=>{
+      if(typeof indexedDB === 'undefined'){ reject(new Error('NO_IDB')); return; }
+      const req = indexedDB.open(IDB_NAME, 1);
+      req.onupgradeneeded = ()=>{
+        const db = req.result;
+        if(!db.objectStoreNames.contains(IDB_STORE)) db.createObjectStore(IDB_STORE);
+      };
+      req.onsuccess = ()=>resolve(req.result);
+      req.onerror = ()=>reject(req.error || new Error('IDB_OPEN_FAILED'));
+    });
+  }
+  async function idbGet(key){
+    if(idbUnavailable) return undefined;
     try{
-      const payload = JSON.stringify({candidates, recruiters, clients, settings});
-      await window.storage.set(STORAGE_KEY, payload, false);
-      settings.lastLocalSaveAt = new Date().toISOString();
-    }catch(e){
-      console.error('Error guardando localmente', e);
+      const db = await idbOpen();
+      return await new Promise((resolve, reject)=>{
+        const tx = db.transaction(IDB_STORE, 'readonly');
+        const req = tx.objectStore(IDB_STORE).get(key);
+        req.onsuccess = ()=>resolve(req.result);
+        req.onerror = ()=>reject(req.error);
+      });
+    }catch(e){ idbUnavailable = true; return undefined; }
+  }
+  async function idbSet(key, value){
+    if(idbUnavailable) return false;
+    try{
+      const db = await idbOpen();
+      return await new Promise((resolve, reject)=>{
+        const tx = db.transaction(IDB_STORE, 'readwrite');
+        tx.objectStore(IDB_STORE).put(value, key);
+        tx.oncomplete = ()=>resolve(true);
+        tx.onerror = ()=>reject(tx.error);
+      });
+    }catch(e){ idbUnavailable = true; return false; }
+  }
+  async function idbDelete(key){
+    if(idbUnavailable) return false;
+    try{
+      const db = await idbOpen();
+      return await new Promise((resolve, reject)=>{
+        const tx = db.transaction(IDB_STORE, 'readwrite');
+        tx.objectStore(IDB_STORE).delete(key);
+        tx.oncomplete = ()=>resolve(true);
+        tx.onerror = ()=>reject(tx.error);
+      });
+    }catch(e){ idbUnavailable = true; return false; }
+  }
+
+  // ======================================================================
+  // PERSISTENCE — guardado en archivo (File System Access API) con
+  // reserva automática a modo de descarga manual donde el navegador no
+  // soporte esa API (por ejemplo Firefox o Safari a la fecha de esto).
+  // ======================================================================
+  const FS_SUPPORTED = !!(window.showSaveFilePicker && window.showOpenFilePicker);
+  let fileHandle = null;
+  let connectedFileName = null;
+  let isDirty = false;
+  let isSaving = false;
+  let lastSavedAt = null;
+  let saveDebounceTimer = null;
+  let pendingFallbackFileName = null;
+
+  function defaultJsonFileName(){
+    const d = new Date();
+    const ymd = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    return `pipeline_reclutamiento_${ymd}.json`;
+  }
+
+  function buildStatePayload(){
+    return {
+      appVersion: APP_VERSION,
+      savedAt: new Date().toISOString(),
+      candidates, recruiters, clients, settings
+    };
+  }
+
+  function applyStatePayload(payload){
+    if(!payload || typeof payload !== 'object') throw new Error('INVALID_FORMAT');
+    if(!Array.isArray(payload.candidates)) throw new Error('INVALID_FORMAT');
+    candidates = payload.candidates || [];
+    recruiters = Array.isArray(payload.recruiters) ? payload.recruiters : [];
+    clients = Array.isArray(payload.clients) ? payload.clients : [];
+    settings = {...settings, ...(payload.settings || {})};
+    candidates.forEach(recomputeCurrentStatusStage);
+  }
+
+  // ---------- Indicador de estado de guardado (topbar + tarjeta config) ----------
+  function setSaveState(state){
+    const dotEls = [document.getElementById('saveStatusDot'), document.getElementById('topSaveDot')];
+    const textEls = [document.getElementById('saveStatusText'), document.getElementById('topSaveText')];
+    const cfg = {
+      idle:        {cls:'', text: t('saveStateIdle')},
+      saving:      {cls:'saving', text: t('saveStateSaving')},
+      saved:       {cls:'saved', text: connectedFileName ? t('saveStateSaved', fmtTime(lastSavedAt), connectedFileName) : t('saveStateSavedNoName', fmtTime(lastSavedAt))},
+      'saved-fallback': {cls:'saved', text: connectedFileName ? t('saveStateDownloaded', connectedFileName) : t('saveStateSaved', fmtTime(lastSavedAt), '')},
+      unsaved:     {cls:'unsaved', text: t('saveStateUnsaved')},
+      'unsaved-nofile': {cls:'unsaved', text: t('saveStateNoFile')},
+      disconnected:{cls:'error', text: t('saveStateDisconnected')},
+      error:       {cls:'error', text: t('saveStateError')},
+    };
+    const c = cfg[state] || cfg.idle;
+    dotEls.forEach(d=>{ if(d){ d.className = 'save-dot ' + c.cls; } });
+    textEls.forEach(el=>{ if(el) el.textContent = c.text; });
+    const indicator = document.getElementById('topSaveIndicator');
+    if(indicator) indicator.title = connectedFileName ? connectedFileName : '';
+  }
+  function fmtTime(date){
+    if(!date) return '';
+    return date.toLocaleTimeString(currentLang==='es'?'es-AR':'en-US', {hour:'2-digit', minute:'2-digit'});
+  }
+
+  function updateConnectedFileDisplay(){
+    const nameEl = document.getElementById('connectedFileName');
+    const subEl = document.getElementById('connectedFileSub');
+    if(!nameEl || !subEl) return;
+    if(connectedFileName){
+      nameEl.textContent = connectedFileName;
+      nameEl.removeAttribute('data-i18n');
+      subEl.textContent = FS_SUPPORTED
+        ? t('fileConnectedSub')
+        : t('fileConnectedSubFallback');
+      subEl.removeAttribute('data-i18n');
+    } else {
+      nameEl.textContent = t('noFileConnected');
+      subEl.textContent = t('noFileConnectedSub');
     }
   }
 
-  async function loadFromStorage(){
-    if(!storageAvailable){ renderAll(); return; }
+  function showReconnectBanner(show){
+    const banner = document.getElementById('reconnectBanner');
+    if(banner) banner.style.display = show ? 'flex' : 'none';
+  }
+
+  // ---------- Escritura / lectura de archivo real ----------
+  async function writeJsonToHandle(handle, payload){
+    const writable = await handle.createWritable();
+    await writable.write(JSON.stringify(payload, null, 2));
+    await writable.close();
+  }
+  async function ensureHandlePermissionSilent(handle){
     try{
-      const result = await window.storage.get(STORAGE_KEY, false);
-      if(result && result.value){
-        const parsed = JSON.parse(result.value);
-        if(parsed.candidates && parsed.candidates.length) candidates = parsed.candidates;
-        if(parsed.recruiters) recruiters = parsed.recruiters;
-        if(parsed.clients) clients = parsed.clients;
-        if(parsed.settings) settings = {...settings, ...parsed.settings};
+      const q = await handle.queryPermission({mode:'readwrite'});
+      return q === 'granted';
+    }catch(e){ return false; }
+  }
+
+  function downloadJsonFallback(){
+    try{
+      const payload = buildStatePayload();
+      const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const name = connectedFileName || defaultJsonFileName();
+      a.href = url; a.download = name;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      connectedFileName = name;
+      isDirty = false;
+      lastSavedAt = new Date();
+      idbSet(IDB_KEY_FILENAME, name);
+      setSaveState('saved-fallback');
+      updateConnectedFileDisplay();
+      showToast(t('toastDownloaded', name), 'success');
+    }catch(e){
+      setSaveState('error');
+      reportError(t('errorSaveTitle'), t('errorSaveMsg'), e);
+    }
+  }
+
+  async function saveAs(){
+    if(!FS_SUPPORTED){ downloadJsonFallback(); return; }
+    try{
+      const handle = await window.showSaveFilePicker({
+        suggestedName: connectedFileName || defaultJsonFileName(),
+        types: [{ description:'Pipeline JSON', accept:{'application/json':['.json']} }]
+      });
+      fileHandle = handle;
+      connectedFileName = handle.name;
+      await idbSet(IDB_KEY_HANDLE, handle);
+      await idbSet(IDB_KEY_FILENAME, handle.name);
+      showReconnectBanner(false);
+      updateConnectedFileDisplay();
+      await performSave({isAuto:false});
+    }catch(e){
+      if(e && e.name==='AbortError') return; // el usuario canceló el selector, no es un error
+      reportError(t('errorSaveAsTitle'), t('errorSaveAsMsg'), e);
+    }
+  }
+
+  async function performSave(opts){
+    opts = opts || {};
+    const isAuto = !!opts.isAuto;
+    if(isSaving) return;
+    isSaving = true;
+    if(!isAuto) setSaveState('saving');
+    try{
+      const payload = buildStatePayload();
+      // Snapshot de emergencia local, siempre, independientemente del archivo.
+      idbSet(IDB_KEY_SNAPSHOT, {json: JSON.stringify(payload), savedAt: payload.savedAt});
+
+      if(FS_SUPPORTED && fileHandle){
+        const ok = await ensureHandlePermissionSilent(fileHandle);
+        if(!ok){
+          setSaveState('disconnected');
+          showReconnectBanner(true);
+          if(!isAuto) showToast(t('toastReconnectNeeded'), 'warning');
+          return;
+        }
+        await writeJsonToHandle(fileHandle, payload);
+        isDirty = false;
+        lastSavedAt = new Date();
+        setSaveState('saved');
+        updateConnectedFileDisplay();
+        if(!isAuto) showToast(t('toastSaved', connectedFileName), 'success');
+      } else if(FS_SUPPORTED && !fileHandle){
+        if(!isAuto){ await saveAs(); }
+        else { setSaveState('unsaved-nofile'); }
+      } else {
+        if(!isAuto){ downloadJsonFallback(); }
+        else { setSaveState('unsaved-nofile'); }
       }
     }catch(e){
-      // no hay datos guardados todavía, se usan los valores por defecto
+      setSaveState('error');
+      if(!isAuto) reportError(t('errorSaveTitle'), t('errorSaveMsg'), e);
+      else showToast(t('toastAutoSaveFailed'), 'error');
+    } finally {
+      isSaving = false;
     }
+  }
+
+  function scheduleSave(){
+    isDirty = true;
+    setSaveState(fileHandle || !FS_SUPPORTED ? 'unsaved' : 'unsaved-nofile');
+    clearTimeout(saveDebounceTimer);
+    saveDebounceTimer = setTimeout(()=>{ performSave({isAuto:true}); }, 1500);
+  }
+
+  async function reconnectFile(){
+    if(!fileHandle){ fileHandle = await idbGet(IDB_KEY_HANDLE); }
+    if(!fileHandle){ showToast(t('toastNoFileToReconnect'), 'warning'); return; }
+    try{
+      const r = await fileHandle.requestPermission({mode:'readwrite'});
+      if(r === 'granted'){
+        connectedFileName = fileHandle.name;
+        showReconnectBanner(false);
+        updateConnectedFileDisplay();
+        showToast(t('toastReconnected', fileHandle.name), 'success');
+        await performSave({isAuto:false});
+      } else {
+        showToast(t('toastPermissionDenied'), 'error');
+      }
+    }catch(e){
+      reportError(t('errorReconnectTitle'), t('errorReconnectMsg'), e);
+    }
+  }
+
+  // ---------- Abrir archivo ----------
+  function pickFileViaInput(){
+    return new Promise((resolve, reject)=>{
+      const input = document.getElementById('fileOpenJsonInput');
+      input.value = '';
+      const handler = (e)=>{
+        const file = e.target.files[0];
+        input.removeEventListener('change', handler);
+        if(!file){ reject(Object.assign(new Error('canceled'), {name:'AbortError'})); return; }
+        pendingFallbackFileName = file.name;
+        const reader = new FileReader();
+        reader.onload = ()=>resolve(reader.result);
+        reader.onerror = ()=>reject(reader.error);
+        reader.readAsText(file);
+      };
+      input.addEventListener('change', handler);
+      input.click();
+    });
+  }
+
+  async function proceedOpenFile(){
+    try{
+      let text, handle = null, name = null;
+      if(FS_SUPPORTED){
+        const [h] = await window.showOpenFilePicker({
+          types: [{ description:'Pipeline JSON', accept:{'application/json':['.json']} }]
+        });
+        handle = h;
+        const file = await handle.getFile();
+        text = await file.text();
+        name = handle.name;
+      } else {
+        text = await pickFileViaInput();
+        name = pendingFallbackFileName;
+      }
+      let payload;
+      try{ payload = JSON.parse(text); }
+      catch(parseErr){ throw Object.assign(new Error('PARSE_ERROR'), {cause:parseErr}); }
+      if(!payload || !Array.isArray(payload.candidates)) throw new Error('INVALID_FORMAT');
+
+      applyStatePayload(payload);
+      if(handle){
+        fileHandle = handle;
+        connectedFileName = handle.name;
+        await idbSet(IDB_KEY_HANDLE, handle);
+        await idbSet(IDB_KEY_FILENAME, handle.name);
+      } else if(name){
+        connectedFileName = name;
+        fileHandle = null;
+        await idbSet(IDB_KEY_FILENAME, name);
+      }
+      isDirty = false;
+      showReconnectBanner(false);
+      setSaveState(FS_SUPPORTED && fileHandle ? 'saved' : 'saved-fallback');
+      updateConnectedFileDisplay();
+      renderAll();
+      showToast(t('toastOpened', connectedFileName || ''), 'success');
+    }catch(e){
+      if(e && e.name==='AbortError') return;
+      if(e.message==='PARSE_ERROR') reportError(t('errorOpenParseTitle'), t('errorOpenParseMsg'), e);
+      else if(e.message==='INVALID_FORMAT') reportError(t('errorOpenFormatTitle'), t('errorOpenFormatMsg'), e);
+      else reportError(t('errorOpenTitle'), t('errorOpenMsg'), e);
+    }
+  }
+
+  async function openFile(){
+    if(isDirty){
+      document.getElementById('confirmOpenOverlay').classList.add('active');
+      return;
+    }
+    await proceedOpenFile();
+  }
+
+  document.getElementById('confirmOpenCancelBtn').addEventListener('click', ()=>{
+    document.getElementById('confirmOpenOverlay').classList.remove('active');
+  });
+  document.getElementById('confirmOpenXBtn').addEventListener('click', ()=>{
+    document.getElementById('confirmOpenOverlay').classList.remove('active');
+  });
+  document.getElementById('confirmOpenOverlay').addEventListener('click', (e)=>{
+    if(e.target===document.getElementById('confirmOpenOverlay')) document.getElementById('confirmOpenOverlay').classList.remove('active');
+  });
+  document.getElementById('confirmOpenDiscardBtn').addEventListener('click', async ()=>{
+    document.getElementById('confirmOpenOverlay').classList.remove('active');
+    await proceedOpenFile();
+  });
+  document.getElementById('confirmOpenSaveBtn').addEventListener('click', async ()=>{
+    document.getElementById('confirmOpenOverlay').classList.remove('active');
+    await performSave({isAuto:false});
+    if(!isDirty){ await proceedOpenFile(); }
+  });
+
+  document.getElementById('saveNowBtn').addEventListener('click', ()=>performSave({isAuto:false}));
+  document.getElementById('saveAsBtn').addEventListener('click', ()=>saveAs());
+  document.getElementById('openFileBtn').addEventListener('click', ()=>openFile());
+  document.getElementById('reconnectBtn').addEventListener('click', ()=>reconnectFile());
+
+  window.addEventListener('beforeunload', (e)=>{
+    if(isDirty){ e.preventDefault(); e.returnValue = ''; }
+  });
+
+  async function recoverFromSnapshot(){
+    try{
+      const snap = await idbGet(IDB_KEY_SNAPSHOT);
+      if(snap && snap.json){
+        const payload = JSON.parse(snap.json);
+        if(payload && Array.isArray(payload.candidates) && payload.candidates.length){
+          applyStatePayload(payload);
+        }
+      }
+    }catch(e){ /* no hay nada que recuperar, se arranca vacío */ }
+  }
+
+  async function initPersistence(){
+    if(!FS_SUPPORTED){
+      try{
+        if(!localStorage.getItem('pipeline_fs_notice_shown')){
+          showToast(t('toastFallbackMode'), 'info', {duration:9000});
+          localStorage.setItem('pipeline_fs_notice_shown', '1');
+        }
+      }catch(e){}
+    }
+
+    try{
+      const handle = await idbGet(IDB_KEY_HANDLE);
+      if(handle){
+        fileHandle = handle;
+        connectedFileName = handle.name;
+        const ok = await ensureHandlePermissionSilent(handle);
+        if(ok){
+          try{
+            const file = await handle.getFile();
+            const text = await file.text();
+            const payload = JSON.parse(text);
+            if(payload && Array.isArray(payload.candidates)){
+              applyStatePayload(payload);
+              setSaveState('saved');
+            }
+          }catch(readErr){
+            await recoverFromSnapshot();
+            setSaveState('disconnected');
+            showReconnectBanner(true);
+          }
+        } else {
+          await recoverFromSnapshot();
+          setSaveState('disconnected');
+          showReconnectBanner(true);
+        }
+      } else {
+        const savedName = await idbGet(IDB_KEY_FILENAME);
+        if(savedName) connectedFileName = savedName;
+        await recoverFromSnapshot();
+        setSaveState(candidates.length ? 'unsaved-nofile' : 'idle');
+      }
+    }catch(e){
+      await recoverFromSnapshot();
+    }
+
     applySettingsToUI();
     setupAutoBackupTimer();
     renderAll();
     maybeShowWhatsNew();
+    updateConnectedFileDisplay();
   }
 
   // ---------- Modal de novedades ----------
@@ -2152,7 +2824,6 @@
     if(!rows){
       settings.lastBackupAt = new Date().toISOString();
       scheduleSave();
-      updateBackupStatusLine();
       updateLastExportLine();
     }
   }
@@ -2168,6 +2839,11 @@
     refreshAllClientSelects();
     scheduleSave();
     renderAll();
+    if(connectedFileName){
+      showToast(t('toastDbResetWithFile', connectedFileName), 'warning', {duration:6000});
+    } else {
+      showToast(t('toastDbReset'), 'info');
+    }
   });
 
   document.getElementById('importCsvBtn').addEventListener('click', ()=>{
@@ -2243,30 +2919,10 @@
 
   function applySettingsToUI(){
     document.getElementById('autoBackupToggle').classList.toggle('on', !!settings.autoBackupEnabled);
-    document.getElementById('autoBackupInterval').value = settings.autoBackupIntervalMin || 30;
+    document.getElementById('autoBackupInterval').value = settings.autoBackupIntervalMin || 5;
     document.getElementById('staleContactDays').value = settings.staleContactDays || 14;
     document.getElementById('staleStageDays').value = settings.staleStageDays || 21;
-    updateBackupStatusLine();
     updateLastExportLine();
-  }
-
-  function updateBackupStatusLine(){
-    const dot = document.getElementById('backupStatusDot');
-    const text = document.getElementById('backupStatusText');
-    if(settings.autoBackupEnabled){
-      dot.classList.remove('off');
-      let msg = t('backupStatusOn', settings.autoBackupIntervalMin);
-      if(settings.lastBackupAt){
-        const time = new Date(settings.lastBackupAt).toLocaleString(currentLang==='es'?'es-AR':'en-US');
-        msg += ' · ' + t('lastBackup', time);
-      } else {
-        msg += ' · ' + t('neverBackedUp');
-      }
-      text.textContent = msg;
-    } else {
-      dot.classList.add('off');
-      text.textContent = t('backupStatusOff');
-    }
   }
 
   document.getElementById('autoBackupToggle').addEventListener('click', ()=>{
@@ -2282,7 +2938,6 @@
     settings.autoBackupIntervalMin = v;
     e.target.value = v;
     setupAutoBackupTimer();
-    updateBackupStatusLine();
     scheduleSave();
   });
   document.getElementById('staleContactDays').addEventListener('change', (e)=>{
@@ -2297,10 +2952,13 @@
   });
 
   function setupAutoBackupTimer(){
+    // Guardado "latido": además del guardado rápido tras cada cambio
+    // (scheduleSave), este intervalo fuerza un guardado periódico aunque
+    // la persona deje la pestaña abierta e inactiva mucho tiempo.
     clearInterval(autoBackupTimer);
     if(settings.autoBackupEnabled){
       const ms = Math.max(1, settings.autoBackupIntervalMin) * 60 * 1000;
-      autoBackupTimer = setInterval(()=>downloadCsv(true), ms);
+      autoBackupTimer = setInterval(()=>{ if(isDirty) performSave({isAuto:true}); }, ms);
     }
   }
 
@@ -2748,7 +3406,7 @@
   });
 
   document.getElementById('appFooterVersion').textContent = `v${APP_VERSION}`;
-  loadFromStorage();
+  initPersistence();
 })();
 </script>
 </body>

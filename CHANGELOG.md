@@ -4,6 +4,23 @@ Todos los cambios relevantes de este proyecto se documentan en este archivo.
 
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y el proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [2.0.0] - 2026-07-18
+
+### Agregado
+- **Nuevo sistema de guardado en archivo**, similar a un programa de escritorio: "Guardar", "Guardar como...", "Abrir..." y guardado automático a un archivo `.json` elegido por la persona usuaria, en su propia computadora. Reemplaza al guardado silencioso en el navegador, que no era confiable fuera del entorno de desarrollo y se perdía con facilidad (reinicios, limpieza de caché, cambio de navegador).
+- **Modo de compatibilidad automático** para navegadores que no soportan el guardado directo a carpeta (Firefox, Safari): "Guardar" descarga el archivo a Descargas y "Abrir" usa un selector de archivo tradicional, sin perder funcionalidad.
+- **Red de seguridad local**: además del archivo elegido, la app guarda una copia de emergencia en el propio navegador (IndexedDB). Si se cierra la pestaña sin haber guardado a un archivo, al volver a abrir la app esos datos se recuperan igual.
+- **Indicador de estado de guardado** siempre visible arriba a la derecha (Guardando / Guardado / Cambios sin guardar / Error / Reconectar).
+- **Avisos (toasts)** para confirmar acciones (guardado exitoso, archivo abierto, reconexión) y errores.
+- **Ventanas de confirmación y error**: se pregunta antes de abrir otro archivo si hay cambios sin guardar (con opción de guardar primero), y se muestra el detalle técnico si algo falla al guardar o abrir un archivo, sin perder los datos en pantalla.
+- Aviso antes de cerrar la pestaña si hay cambios sin guardar.
+- Banner de "Reconectar" cuando el navegador pierde el permiso de escritura sobre el archivo conectado (por ejemplo tras reiniciarlo), con reconexión en un clic.
+
+### Cambiado
+- La tarjeta "Respaldo automático (CSV)" de Configuración fue reemplazada por la nueva tarjeta "Guardado", que controla el archivo principal del pipeline.
+- La tarjeta de CSV pasa a llamarse "Exportar / Importar CSV" y queda explícitamente como herramienta para compartir datos o abrirlos en Excel, no como mecanismo de guardado.
+- El guardado automático ahora está activado por defecto, con un intervalo de referencia de 5 minutos (además del guardado rápido que ocurre unos segundos después de cada cambio).
+
 ## [1.6.0] - 2026-06-24
 
 ### Agregado
