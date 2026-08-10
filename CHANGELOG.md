@@ -4,6 +4,35 @@ Todos los cambios relevantes de este proyecto se documentan en este archivo.
 
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y el proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [2.2.0] - 2026-08-10
+
+### Agregado
+- **Guardado en carpeta**: se elige una carpeta una sola vez y la app mantiene ahí un único `pipeline.json`, siempre el mismo archivo, más una subcarpeta `backups/` con copias fechadas: una por cada guardado manual y, en el guardado automático, como mucho una por hora (dos guardados dentro del mismo minuto comparten copia). Se conservan las 10 más recientes y las viejas se borran solas.
+- **Destino de guardado obligatorio**: si no hay ninguno configurado, o se perdió el acceso al que había, un modal bloqueante pide elegir uno antes de poder seguir usando la app. Antes se podía trabajar toda una sesión sin que los datos llegaran a ningún archivo.
+- **Detección de conflictos**: antes de sobrescribir se compara la fecha de modificación del archivo con la que dejó la app. Si lo cambiaron por fuera (otra pestaña, otra persona, una carpeta sincronizada), se pregunta entre pisar el archivo o descartar los cambios locales y recargar.
+- **Verificación post-escritura**: después de guardar, la app relee el archivo y confirma que sea un JSON válido con la misma cantidad de candidatos. Si no coincide, avisa en vez de reportar un guardado exitoso.
+- **Aviso de cambios sin guardar**: banner visible en todas las pantallas cuando pasan más de 10 minutos con cambios pendientes, con botón para guardar en el momento.
+- **Panel de estado del guardado** en Configuración: destino actual, último guardado, última copia en el navegador y cantidad de candidatos guardados.
+
+### Cambiado
+- La copia de emergencia del navegador pasa de una sola versión a las 5 últimas, separadas por al menos 5 minutos entre sí, para que sirvan como historial y no como cinco copias del mismo instante.
+- La app pide al navegador almacenamiento persistente (`navigator.storage.persist()`), para que la copia de emergencia no sea desalojada por falta de espacio.
+- "Reconectar" ahora también restablece el permiso de una carpeta conectada, no solo el de un archivo suelto.
+
+### Corregido
+- El indicador de guardado mostraba "Guardado" sin hora al abrir la app, porque la hora era una variable de sesión que arrancaba vacía. Ahora se toma del `savedAt` del propio archivo y se muestra con la fecha cuando el guardado no es de hoy.
+
+## [2.1.0] - 2026-08-10
+
+### Agregado
+- Filtro de "Título profesional" (job title) en el módulo de Base de datos: se completa automáticamente con los títulos cargados en los candidatos y se combina con los filtros ya existentes, la búsqueda y la exportación de la vista filtrada.
+- El pie de página ahora muestra la fecha de publicación junto al número de versión, y al hacer clic reabre el modal de novedades para consultar los cambios cuando se quiera.
+
+### Cambiado
+- El CSS y el JavaScript se separaron del HTML en archivos propios (`styles.css` y `app.js`), enlazados con rutas relativas desde `index.html`. Sin cambios de comportamiento: es la misma aplicación repartida en tres archivos.
+- Los enlaces a `styles.css` y `app.js` llevan la versión como parámetro (`?v=2.1.0`), para que al publicar una versión nueva el navegador no siga usando los archivos viejos que tenía en caché.
+- El proceso de publicación de versiones quedó documentado en el README, con la checklist de los cuatro lugares donde hay que actualizar el número.
+
 ## [2.0.0] - 2026-07-18
 
 ### Agregado

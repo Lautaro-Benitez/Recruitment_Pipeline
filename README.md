@@ -1,6 +1,6 @@
 # Pipeline de Reclutamiento
 
-[![Version](https://img.shields.io/badge/version-2.0.0-blue)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-2.2.0-blue)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 ![Windows](https://img.shields.io/badge/Windows-supported-blue?style=flat&logo=windows&logoColor=white)
 ![macOS](https://img.shields.io/badge/macOS-supported-blue?style=flat&logo=apple&logoColor=white)
@@ -10,7 +10,7 @@
 [![CSS3](https://img.shields.io/badge/CSS3-Vanilla-1572B6?style=flat&logo=css3&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/CSS)
 [![Backend](https://img.shields.io/badge/backend-none-lightgrey)](#stack-técnico)
 
-Herramienta de pipeline de reclutamiento de un solo archivo HTML, pensada para que una persona reclutadora tenga una base de candidatos precisa, filtrable, y un dashboard de métricas para reportar a su superior — sin instalar nada ni depender de un servidor.
+Herramienta de pipeline de reclutamiento que corre entera en el navegador (`index.html` + `styles.css` + `app.js`, sin paso de build), pensada para que una persona reclutadora tenga una base de candidatos precisa, filtrable, y un dashboard de métricas para reportar a su superior — sin instalar nada ni depender de un servidor.
 
 ---
 
@@ -35,20 +35,20 @@ Herramienta de pipeline de reclutamiento de un solo archivo HTML, pensada para q
 ## Características
 
 - **Base de datos de candidatos** con los 25 campos del pipeline (datos personales, perfil profesional, condiciones, estado del proceso, fechas y notas).
-- **Búsqueda y filtros combinables** por posición, estado, etapa, reclutador/a y cliente.
+- **Búsqueda y filtros combinables** por título profesional, posición, estado, etapa, reclutador/a y cliente.
 - **Dashboard ejecutivo** con KPIs, embudo de selección, distribución por estado/posición/reclutador/cliente, resultados de procesos cerrados y tendencia mensual.
 - **Panel de alertas** configurable: detecta seguimientos vencidos, candidatos sin contacto reciente y procesos estancados en una etapa.
 - **Gestores de Reclutadores y Clientes**, reutilizables como listas desplegables en cada candidato.
 - **Bilingüe** (Español / English), con un selector que traduce toda la interfaz al vuelo.
 - **Exportación e importación CSV**, manual o automática por intervalo de tiempo configurable.
 - **Persistencia local en el navegador**: los datos no se pierden al cerrar o recargar la pestaña.
-- **Sin instalación, sin backend, sin costos**: es un único archivo `.html` que corre en cualquier navegador moderno.
+- **Sin instalación, sin backend, sin costos**: se abre `index.html` en cualquier navegador moderno y listo.
 
 ---
 
 ## Cómo usarla
 
-1. Abrí el archivo `.html` en cualquier navegador moderno (Chrome, Edge, Firefox, Safari).
+1. Abrí `index.html` en cualquier navegador moderno (Chrome, Edge, Firefox, Safari), manteniendo `styles.css` y `app.js` en la misma carpeta.
 2. Cargá candidatos desde **Base de Datos → + Nuevo candidato**, o importá un CSV existente desde **Configuración → Importar CSV**.
 3. Consultá las métricas en **Dashboard**, ajustando los filtros superiores (posición, reclutador/a, cliente, rango de fechas) según lo que necesites mostrar.
 4. Configurá reclutadores, clientes, alertas y respaldo automático desde **Configuración**.
@@ -109,10 +109,14 @@ El selector ES / EN, ubicado en la esquina superior derecha, traduce toda la int
 
 Esta herramienta es 100% client-side: no hay servidor ni base de datos externa. El guardado funciona como en un programa de escritorio:
 
-- **Archivo principal**: desde Configuración → Guardado, elegís una vez dónde guardar el pipeline (`.json`). A partir de ahí, "Guardar" reescribe ese mismo archivo, "Guardar como..." crea uno nuevo o guarda una copia, y "Abrir..." carga un archivo `.json` guardado previamente.
+- **Destino obligatorio**: la app no se puede usar sin un lugar donde guardar. Al abrirla sin destino configurado —o si se pierde el acceso al que había— aparece un modal que no se puede cerrar hasta elegir uno. Es a propósito: sin destino, todo el trabajo de la sesión quedaría solamente en la copia de emergencia del navegador.
+- **Carpeta (recomendado)**: desde Configuración → Guardado → "Elegir carpeta...", se elige una carpeta una sola vez. La app mantiene ahí un único `pipeline.json`, siempre el mismo archivo, y una subcarpeta `backups/` con copias fechadas de la que conserva las 10 más recientes y borra el resto. Se genera una copia en cada guardado manual y, en el automático, como mucho una por hora; como el nombre de la copia llega hasta el minuto, dos guardados dentro del mismo minuto comparten la misma.
+- **Archivo suelto**: "Guardar como..." conecta un `.json` puntual en vez de una carpeta. Funciona igual para el guardado, pero sin copias de respaldo. "Abrir..." carga un archivo guardado previamente.
+- **Integridad**: antes de sobrescribir, la app compara la fecha de modificación del archivo con la que dejó ella; si alguien lo tocó por afuera (otra pestaña, otra persona, una carpeta sincronizada con Drive/OneDrive) pregunta antes de pisarlo. Después de escribir, relee el archivo y verifica que sea un JSON válido con la misma cantidad de candidatos: si no coincide, avisa en vez de reportar un "Guardado" que no fue.
 - **Guardado automático**: activado por defecto. Los cambios se guardan al archivo conectado unos segundos después de cada edición, y además hay un guardado periódico de referencia (intervalo configurable) para sesiones largas e inactivas.
 - **Compatibilidad de navegadores**: el guardado directo a un archivo elegido usa la File System Access API, soportada en Chrome, Edge y navegadores basados en Chromium. En navegadores que no la soportan (Firefox, Safari), la herramienta cae automáticamente a un modo de compatibilidad: "Guardar" descarga el `.json` a la carpeta de Descargas cada vez, y "Abrir" usa el selector de archivos tradicional. La funcionalidad es la misma; solo cambia si hace falta volver a elegir el archivo en cada guardado.
-- **Red de seguridad local**: además del archivo, cada cambio se guarda también como copia de emergencia en el propio navegador (IndexedDB). Si se cierra la pestaña sin haber guardado a un archivo, esa copia se recupera automáticamente al volver a abrir la herramienta — así nunca se pierde el trabajo en curso, aunque lo ideal siga siendo tener un archivo `.json` conectado.
+- **Red de seguridad local**: además del archivo, cada cambio se guarda también como copia de emergencia en el propio navegador (IndexedDB). Se conservan las 5 últimas versiones, separadas por al menos 5 minutos entre sí, y se recuperan automáticamente si el archivo no se puede leer. La app además pide al navegador que marque ese almacenamiento como persistente, para que no lo borre por falta de espacio.
+- **Aviso de cambios sin guardar**: si pasan más de 10 minutos con cambios pendientes, aparece un banner rojo visible en todas las pantallas con un botón para guardar en el momento.
 - **Reconexión**: los navegadores pueden pedir reconfirmar el permiso de escritura sobre el archivo conectado (por ejemplo tras reiniciar el navegador). Cuando eso pasa, aparece un aviso con un botón "Reconectar" — un clic y se retoma el guardado normal.
 - **Exportación / importación CSV**: aparte del archivo principal, sigue disponible exportar/importar CSV desde Configuración, pensado para compartir datos puntuales o abrirlos en Excel — no reemplaza al archivo de guardado principal.
 
@@ -135,7 +139,7 @@ Ambas listas alimentan los menús desplegables del formulario de candidato y los
 - Sin frameworks, sin librerías externas, sin paso de build.
 - Gráfico de tendencia renderizado en SVG nativo.
 - Persistencia mediante almacenamiento clave-valor del navegador.
-- Un único archivo `.html` autocontenido.
+- Tres archivos en una misma carpeta: `index.html` (estructura), `styles.css` (estilos) y `app.js` (lógica), enlazados con rutas relativas.
 
 ---
 
@@ -158,7 +162,23 @@ Ambas listas alimentan los menús desplegables del formulario de candidato y los
 
 ## Versionado
 
-Este proyecto sigue [Semantic Versioning](https://semver.org/lang/es/). Los cambios de cada versión están documentados en [`CHANGELOG.md`](CHANGELOG.md). La versión vigente se muestra también en el pie de página de la propia aplicación.
+Este proyecto sigue [Semantic Versioning](https://semver.org/lang/es/): `MAYOR.MENOR.PARCHE`, donde MAYOR es un cambio que rompe compatibilidad (por ejemplo, con los archivos guardados), MENOR es funcionalidad nueva compatible hacia atrás y PARCHE es una corrección.
+
+La **única fuente de verdad** de la versión es la constante `APP_VERSION` en [`app.js`](app.js). De ahí salen:
+
+- el número que se muestra en el pie de página, junto a la fecha de publicación (`APP_RELEASE_DATE`) — hacer clic ahí reabre el modal de novedades;
+- el modal de **Novedades**, que aparece solo una vez por versión, cuando la persona usuaria abre una versión más nueva que la última que vio;
+- el campo `appVersion` que queda estampado dentro de cada archivo `.json` guardado.
+
+### Checklist para publicar una versión
+
+1. **`app.js`** — subir `APP_VERSION` y `APP_RELEASE_DATE`, y reescribir `RELEASE_NOTES` (español e inglés) con lo que cambió en esta versión, en lenguaje de persona usuaria.
+2. **`index.html`** — actualizar el `?v=` de `styles.css` y `app.js` al nuevo número. Es lo que fuerza al navegador a bajar los archivos nuevos en vez de servir los cacheados.
+3. **`CHANGELOG.md`** — agregar la entrada de la versión con su fecha, siguiendo el formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) (Agregado / Cambiado / Corregido).
+4. **`README.md`** — actualizar el badge de versión del encabezado.
+5. Etiquetar el commit: `git tag -a v2.2.0 -m "v2.2.0"` y `git push --tags`.
+
+Los cuatro números (constante, `?v=`, changelog y badge) tienen que coincidir siempre.
 
 ---
 
