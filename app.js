@@ -530,7 +530,7 @@
   //   2. Actualizar RELEASE_NOTES (es/en) con lo que cambió.
   //   3. Agregar la entrada correspondiente en CHANGELOG.md.
   //   4. Actualizar el ?v= de styles.css y app.js en index.html.
-  const APP_VERSION = '2.3.0';
+  const APP_VERSION = '2.4.0';
   const APP_RELEASE_DATE = '2026-08-21'; // AAAA-MM-DD; se muestra formateada en el pie
 
   // Notas de la versión actual, mostradas en el modal de novedades cuando
@@ -539,34 +539,24 @@
     version: APP_VERSION,
     es: [
       { title:"Nuevo", items:[
-        "Arquitectura de Estilos: Refactorización completa del sistema de estilos migrando a la metodología ITCSS y Diseño Atómico (OOCSS/BEM). Todo el CSS es modular ahora.",
-        "Guardado en carpeta: elegís una carpeta una sola vez y la app mantiene ahí un único pipeline.json, siempre el mismo, más copias fechadas en una subcarpeta backups/ que se renuevan solas.",
-        "La app ya no se puede usar sin un lugar donde guardar: si no hay ninguno configurado, o se pierde el acceso, pide elegirlo antes de seguir.",
-        "Aviso si el archivo fue modificado por fuera de la app (otra pestaña, otra persona, una carpeta sincronizada) antes de pisarlo.",
-        "Panel de estado en Configuración: destino, último guardado, última copia en el navegador y cantidad de candidatos guardados."
+        "Dropdowns Custom: Reemplazamos los aburridos menús selectores nativos por menús desplegables 100% personalizados y estilizados.",
+        "Calendario (Datepicker): Se creó un motor de calendario desde cero en Vanilla JS para unificar la experiencia al elegir fechas en lugar de usar el calendario por defecto del sistema.",
+        "El campo principal de búsqueda ahora incluye un elegante ícono de lupa."
       ]},
       { title:"Mejorado", items:[
-        "El código HTML fue limpiado eliminando estilos integrados para adoptar un sistema de clases utilitarias.",
-        "Después de cada guardado la app relee el archivo para confirmar que quedó completo, en vez de decir \"Guardado\" a ciegas.",
-        "El indicador ahora muestra bien la hora del último guardado, con fecha cuando no es de hoy, incluso al abrir la app.",
-        "Si pasan más de 10 minutos con cambios sin guardar, aparece un aviso visible en todas las pantallas.",
-        "La copia de emergencia del navegador ahora guarda las últimas 5 versiones en vez de una sola."
+        "Arquitectura de Estilos: Refactorización completa del sistema de estilos migrando a la metodología ITCSS y Diseño Atómico (OOCSS/BEM). Todo el CSS es modular ahora.",
+        "El código HTML fue limpiado eliminando estilos integrados para adoptar un sistema de clases utilitarias."
       ]}
     ],
     en: [
       { title:"New", items:[
-        "Styles Architecture: Complete refactoring of the styles system, migrating to the ITCSS methodology and Atomic Design (OOCSS/BEM). All CSS is modular now.",
-        "Folder saving: pick a folder once and the app keeps a single pipeline.json in it, always the same file, plus dated copies in a backups/ subfolder that rotate on their own.",
-        "The app can no longer be used without a place to save: if none is configured, or access is lost, it asks you to choose one before continuing.",
-        "Warning if the file was modified outside the app (another tab, another person, a synced folder) before overwriting it.",
-        "Status panel in Settings: destination, last save, last in-browser copy and number of candidates saved."
+        "Custom Dropdowns: We replaced the boring native select menus with 100% custom and styled dropdown menus.",
+        "Calendar (Datepicker): A calendar engine was built from scratch in Vanilla JS to unify the date picking experience instead of using the system's default calendar.",
+        "The main search field now includes an elegant magnifying glass icon."
       ]},
       { title:"Improved", items:[
-        "The HTML code was cleaned by removing inline styles to adopt a utility class system.",
-        "After each save the app reads the file back to confirm it came out complete, instead of claiming \"Saved\" blindly.",
-        "The indicator now shows the last save time correctly, with the date when it isn't today, including right after opening the app.",
-        "If more than 10 minutes go by with unsaved changes, a visible warning appears on every screen.",
-        "The browser's emergency copy now keeps the last 5 versions instead of just one."
+        "Styles Architecture: Complete refactoring of the styles system, migrating to the ITCSS methodology and Atomic Design (OOCSS/BEM). All CSS is modular now.",
+        "The HTML code was cleaned by removing inline styles to adopt a utility class system."
       ]}
     ]
   };
@@ -1889,6 +1879,7 @@
     const current = sel.value;
     sel.innerHTML = `<option value="">${noneLabel}</option>` + values.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
     if(values.includes(current)) sel.value = current;
+    if(sel._customDropdown) sel._customDropdown.updateOptions();
   }
 
   // ======================================================================
@@ -2157,6 +2148,7 @@
     }
     sel.innerHTML = `<option value="">${placeholder}</option>` + opts;
     if(current) sel.value = current;
+    if(sel._customDropdown) sel._customDropdown.updateOptions();
   }
 
   function getFiltered(){
@@ -2879,6 +2871,233 @@
   }
 
   // ======================================================================
+  // CUSTOM DROPDOWNS
+  // ======================================================================
+  class CustomDropdown {
+    constructor(selectEl) {
+      this.selectEl = selectEl;
+      this.selectEl._customDropdown = this;
+      this.selectEl.style.display = 'none';
+
+      this.wrapper = document.createElement('div');
+      this.wrapper.className = 'custom-select-wrapper';
+
+      this.trigger = document.createElement('div');
+      this.trigger.className = 'custom-select-trigger';
+      
+      this.optionsContainer = document.createElement('div');
+      this.optionsContainer.className = 'custom-select-options';
+
+      this.wrapper.appendChild(this.trigger);
+      this.wrapper.appendChild(this.optionsContainer);
+
+      this.selectEl.parentNode.insertBefore(this.wrapper, this.selectEl.nextSibling);
+
+      this.trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = this.wrapper.classList.contains('open');
+        document.querySelectorAll('.custom-select-wrapper').forEach(w => w.classList.remove('open'));
+        if(!isOpen) this.wrapper.classList.add('open');
+      });
+
+      this.selectEl.addEventListener('change', () => this.updateTriggerLabel());
+      
+      this.buildOptions();
+    }
+
+    buildOptions() {
+      this.optionsContainer.innerHTML = '';
+      const options = Array.from(this.selectEl.options);
+      options.forEach(opt => {
+        const optionEl = document.createElement('div');
+        optionEl.className = 'custom-select-option';
+        optionEl.textContent = opt.textContent;
+        optionEl.dataset.value = opt.value;
+        if(opt.selected) optionEl.classList.add('selected');
+
+        optionEl.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.selectEl.value = opt.value;
+          this.wrapper.classList.remove('open');
+          this.selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+        this.optionsContainer.appendChild(optionEl);
+      });
+      this.updateTriggerLabel();
+    }
+
+    updateTriggerLabel() {
+      const selectedOpt = this.selectEl.options[this.selectEl.selectedIndex];
+      this.trigger.innerHTML = `<span>${selectedOpt ? escapeHtml(selectedOpt.textContent) : ''}</span>`;
+      
+      const optionEls = this.optionsContainer.querySelectorAll('.custom-select-option');
+      optionEls.forEach(el => {
+        if(el.dataset.value === this.selectEl.value) el.classList.add('selected');
+        else el.classList.remove('selected');
+      });
+    }
+
+    updateOptions() {
+      this.buildOptions();
+    }
+  }
+
+  function initCustomDropdowns() {
+    const selects = document.querySelectorAll('select:not([multiple])');
+    selects.forEach(sel => {
+      if(!sel._customDropdown) new CustomDropdown(sel);
+    });
+
+    document.addEventListener('click', () => {
+      document.querySelectorAll('.custom-select-wrapper').forEach(w => w.classList.remove('open'));
+    });
+  }
+
+  // ======================================================================
+  // CUSTOM DATEPICKERS
+  // ======================================================================
+  class CustomDatepicker {
+    constructor(inputEl) {
+      this.inputEl = inputEl;
+      this.inputEl._customDatepicker = this;
+      this.inputEl.style.display = 'none';
+
+      this.currentViewDate = new Date(); // Month/Year currently being viewed
+
+      this.wrapper = document.createElement('div');
+      this.wrapper.className = 'custom-date-wrapper';
+
+      this.trigger = document.createElement('div');
+      this.trigger.className = 'custom-date-trigger';
+      
+      this.panel = document.createElement('div');
+      this.panel.className = 'custom-date-panel';
+
+      this.wrapper.appendChild(this.trigger);
+      this.wrapper.appendChild(this.panel);
+
+      this.inputEl.parentNode.insertBefore(this.wrapper, this.inputEl.nextSibling);
+
+      this.trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = this.wrapper.classList.contains('open');
+        document.querySelectorAll('.custom-date-wrapper').forEach(w => w.classList.remove('open'));
+        if(!isOpen) {
+          this.wrapper.classList.add('open');
+          if(this.inputEl.value) {
+            const [y,m,d] = this.inputEl.value.split('-');
+            this.currentViewDate = new Date(parseInt(y,10), parseInt(m,10)-1, parseInt(d,10));
+          } else {
+            this.currentViewDate = new Date();
+          }
+          this.renderCalendar();
+        }
+      });
+
+      this.panel.addEventListener('click', e => e.stopPropagation());
+      this.inputEl.addEventListener('change', () => this.updateTriggerLabel());
+      
+      this.updateTriggerLabel();
+    }
+
+    updateTriggerLabel() {
+      if(!this.inputEl.value) {
+        this.trigger.textContent = currentLang === 'es' ? 'Seleccionar fecha' : 'Select date';
+        this.trigger.classList.add('empty');
+      } else {
+        const [y,m,d] = this.inputEl.value.split('-');
+        this.trigger.textContent = `${d}/${m}/${y}`;
+        this.trigger.classList.remove('empty');
+      }
+    }
+
+    renderCalendar() {
+      const year = this.currentViewDate.getFullYear();
+      const month = this.currentViewDate.getMonth();
+      
+      const monthNames = currentLang === 'es' 
+        ? ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
+        : ['January','February','March','April','May','June','July','August','September','October','November','December'];
+      const weekDays = currentLang === 'es' ? ['Do','Lu','Ma','Mi','Ju','Vi','Sá'] : ['Su','Mo','Tu','We','Th','Fr','Sa'];
+
+      let html = `<div class="dp-header">
+        <button type="button" class="dp-prev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+        <div class="dp-month-year">${monthNames[month]} ${year}</div>
+        <button type="button" class="dp-next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
+      </div>`;
+
+      html += `<div class="dp-grid">`;
+      weekDays.forEach(wd => { html += `<div class="dp-weekday">${wd}</div>`; });
+
+      const firstDay = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+      for(let i=0; i<firstDay; i++) {
+        html += `<div class="dp-day empty"></div>`;
+      }
+
+      const today = new Date();
+      let selectedDate = null;
+      if(this.inputEl.value) {
+        const [y,m,d] = this.inputEl.value.split('-');
+        selectedDate = new Date(parseInt(y,10), parseInt(m,10)-1, parseInt(d,10));
+      }
+
+      for(let d=1; d<=daysInMonth; d++) {
+        let classes = 'dp-day';
+        if(today.getFullYear() === year && today.getMonth() === month && today.getDate() === d) classes += ' today';
+        if(selectedDate && selectedDate.getFullYear() === year && selectedDate.getMonth() === month && selectedDate.getDate() === d) classes += ' selected';
+        html += `<div class="${classes}" data-date="${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}">${d}</div>`;
+      }
+
+      html += `</div>`;
+      
+      if(this.inputEl.value) {
+        html += `<button type="button" class="dp-clear">${currentLang==='es'?'Borrar fecha':'Clear date'}</button>`;
+      }
+
+      this.panel.innerHTML = html;
+
+      this.panel.querySelector('.dp-prev').addEventListener('click', () => {
+        this.currentViewDate.setMonth(this.currentViewDate.getMonth() - 1);
+        this.renderCalendar();
+      });
+      this.panel.querySelector('.dp-next').addEventListener('click', () => {
+        this.currentViewDate.setMonth(this.currentViewDate.getMonth() + 1);
+        this.renderCalendar();
+      });
+
+      this.panel.querySelectorAll('.dp-day:not(.empty)').forEach(dayEl => {
+        dayEl.addEventListener('click', () => {
+          this.inputEl.value = dayEl.dataset.date;
+          this.wrapper.classList.remove('open');
+          this.inputEl.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+      });
+
+      const clearBtn = this.panel.querySelector('.dp-clear');
+      if(clearBtn) {
+        clearBtn.addEventListener('click', () => {
+          this.inputEl.value = '';
+          this.wrapper.classList.remove('open');
+          this.inputEl.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+      }
+    }
+  }
+
+  function initCustomDatepickers() {
+    const dates = document.querySelectorAll('input[type="date"]');
+    dates.forEach(inp => {
+      if(!inp._customDatepicker) new CustomDatepicker(inp);
+    });
+
+    document.addEventListener('click', () => {
+      document.querySelectorAll('.custom-date-wrapper').forEach(w => w.classList.remove('open'));
+    });
+  }
+
+  // ======================================================================
   // INIT
   // ======================================================================
   document.querySelector('.lang-btn[data-lang="en"]').classList.add('active');
@@ -2900,5 +3119,7 @@
     if(e.key==='Enter' || e.key===' '){ e.preventDefault(); openWhatsNew(); }
   });
   renderFooterVersion();
+  initCustomDropdowns();
+  initCustomDatepickers();
   initPersistence();
 })();

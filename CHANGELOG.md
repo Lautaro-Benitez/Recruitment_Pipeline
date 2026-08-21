@@ -4,6 +4,13 @@ Todos los cambios relevantes de este proyecto se documentan en este archivo.
 
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y el proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [2.4.0] - 2026-08-21
+
+### Agregado
+- **Custom Dropdowns**: Reemplazo de los menús desplegables nativos (`<select>`) por componentes de interfaz gráfica personalizados 100% en Vanilla JS.
+- **Custom Datepicker**: Nuevo calendario integrado construido desde cero para reemplazar los inputs nativos `<input type="date">`, garantizando uniformidad en todos los navegadores.
+- Ícono de búsqueda "Lupa" en el campo principal de búsqueda.
+
 ## [2.3.0] - 2026-08-21
 
 ### Agregado

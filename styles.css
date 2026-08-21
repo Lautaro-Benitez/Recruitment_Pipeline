@@ -36,6 +36,7 @@
 @import url('./css/components/_toolbar.css');
 @import url('./css/components/_empty-state.css');
 @import url('./css/components/_dropdown.css');
+@import url('./css/components/_datepicker.css');
 
 /* Global specifics */
 ::-webkit-scrollbar{height:10px;width:10px;}
