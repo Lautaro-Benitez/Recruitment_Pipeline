@@ -21,6 +21,7 @@
       exportFiltered:"Exportar filtrado (CSV)", noFilteredToExport:"No hay candidatos que coincidan con los filtros actuales.",
       reportGeneratedOn:"Generado el", reportFilters:"Filtros aplicados", reportNoFilters:"Sin filtros (toda la base)",
       reportFilterPosition:"Posición", reportFilterRecruiter:"Reclutador/a", reportFilterClient:"Cliente",
+      reportFilterJobTitle:"Título profesional",
       reportFilterStatus:"Estado", reportFilterStage:"Etapa",
       reportFilterPeriod:"Período",
       trendTitle:"Tendencia mensual", alertsTitle:"Alertas",
@@ -215,6 +216,7 @@
       exportFiltered:"Export filtered (CSV)", noFilteredToExport:"No candidates match the current filters.",
       reportGeneratedOn:"Generated on", reportFilters:"Applied filters", reportNoFilters:"No filters (full database)",
       reportFilterPosition:"Position", reportFilterRecruiter:"Recruiter", reportFilterClient:"Client",
+      reportFilterJobTitle:"Job title",
       reportFilterStatus:"Status", reportFilterStage:"Stage",
       reportFilterPeriod:"Period",
       trendTitle:"Monthly trend", alertsTitle:"Alerts",
@@ -2134,6 +2136,7 @@
     fillSelectKeyed(filterRecruiter, uniqueValues('recruiter'), t('allRecruiters'));
     fillSelectKeyed(filterClient, uniqueValues('client'), t('allClients'));
 
+    fillSelectKeyed(document.getElementById('dashFilterJobTitle'), uniqueValues('jobTitle'), t('allJobTitles'));
     fillSelectKeyed(document.getElementById('dashFilterPosition'), uniqueValues('position'), t('allPositions'));
     fillSelectKeyed(document.getElementById('dashFilterStatus'), Lookups.status.usedBy(candidates, c=>c.status), t('allStatuses'), true);
     fillSelectKeyed(document.getElementById('dashFilterStage'), Lookups.stage.usedBy(candidates, c=>c.stage), t('allStages'), true);
@@ -2444,6 +2447,7 @@
   // ======================================================================
   // DASHBOARD (with its own filters)
   // ======================================================================
+  const dashFilterJobTitle = document.getElementById('dashFilterJobTitle');
   const dashFilterPosition = document.getElementById('dashFilterPosition');
   const dashFilterStatus = document.getElementById('dashFilterStatus');
   const dashFilterStage = document.getElementById('dashFilterStage');
@@ -2452,11 +2456,11 @@
   const dashFilterDateFrom = document.getElementById('dashFilterDateFrom');
   const dashFilterDateTo = document.getElementById('dashFilterDateTo');
 
-  [dashFilterPosition, dashFilterStatus, dashFilterStage, dashFilterRecruiter, dashFilterClient, dashFilterDateFrom, dashFilterDateTo]
+  [dashFilterJobTitle, dashFilterPosition, dashFilterStatus, dashFilterStage, dashFilterRecruiter, dashFilterClient, dashFilterDateFrom, dashFilterDateTo]
     .forEach(el=>el.addEventListener('change', renderDashboard));
 
   document.getElementById('dashClearFilters').addEventListener('click', ()=>{
-    dashFilterPosition.value=''; dashFilterStatus.value=''; dashFilterStage.value='';
+    dashFilterJobTitle.value=''; dashFilterPosition.value=''; dashFilterStatus.value=''; dashFilterStage.value='';
     dashFilterRecruiter.value=''; dashFilterClient.value='';
     dashFilterDateFrom.value=''; dashFilterDateTo.value='';
     renderDashboard();
@@ -2472,6 +2476,7 @@
     const now = new Date().toLocaleDateString(locale, {year:'numeric', month:'long', day:'numeric'});
 
     const parts = [];
+    if(dashFilterJobTitle.value) parts.push(`<b>${t('reportFilterJobTitle')}:</b> ${escapeHtml(selectedLabel(dashFilterJobTitle))}`);
     if(dashFilterPosition.value) parts.push(`<b>${t('reportFilterPosition')}:</b> ${escapeHtml(selectedLabel(dashFilterPosition))}`);
     if(dashFilterStatus.value) parts.push(`<b>${t('reportFilterStatus')}:</b> ${escapeHtml(selectedLabel(dashFilterStatus))}`);
     if(dashFilterStage.value) parts.push(`<b>${t('reportFilterStage')}:</b> ${escapeHtml(selectedLabel(dashFilterStage))}`);
@@ -2531,6 +2536,7 @@
 
   function getDashboardFiltered(){
     return candidates.filter(c=>{
+      if(dashFilterJobTitle.value && c.jobTitle!==dashFilterJobTitle.value) return false;
       if(dashFilterPosition.value && c.position!==dashFilterPosition.value) return false;
       if(dashFilterStatus.value && c.status!==dashFilterStatus.value) return false;
       if(dashFilterStage.value && c.stage!==dashFilterStage.value) return false;
