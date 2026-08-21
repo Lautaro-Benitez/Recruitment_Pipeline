@@ -1,0 +1,10 @@
+.u-text-sm { font-size: 13.5px !important; }
+.u-text-xs { font-size: 11.5px !important; }
+.u-text-mono-xs { font-size: 11px !important; font-family: var(--mono) !important; }
+
+.u-color-gray-700 { color: var(--gray-700) !important; }
+.u-color-gray-500 { color: var(--gray-500) !important; }
+.u-color-ink-soft { color: var(--ink-soft) !important; }
+
+.u-line-height-base { line-height: 1.5 !important; }
+.u-cursor-pointer { cursor: pointer !important; }

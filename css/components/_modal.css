@@ -1,0 +1,51 @@
+/* ---------- Modal ---------- */
+.overlay{
+  display:none;position:fixed;inset:0;background:rgba(24,24,27,.5);
+  align-items:flex-start;justify-content:center;z-index:50;padding:40px 16px;overflow:auto;
+  backdrop-filter:blur(2px);
+}
+.overlay.active{display:flex;}
+.modal{
+  background:var(--panel);border-radius:var(--radius-lg);width:100%;max-width:760px;
+  box-shadow:0 20px 50px rgba(24,24,27,.22);
+}
+.modal.modal-narrow{max-width:520px;}
+.modal-head{
+  display:flex;justify-content:space-between;align-items:center;
+  border-bottom:1px solid var(--line);
+  padding:20px 24px 10px;
+}
+.modal-head h3{margin:0;font-size:16.5px;font-weight:700;letter-spacing:-0.01em;}
+.modal-body{padding:14px 24px 20px;max-height:72vh;overflow:auto;}
+.modal-foot{
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+  padding:14px 24px 20px;
+}
+/* Botonera del gate: en fila, centrada (envuelve sólo si no entra) */
+.modal-foot-stack{
+  flex-direction:row;flex-wrap:wrap;justify-content:center;gap:8px;
+}
+/* Botonera del modal genérico de decisión: alineada a la derecha */
+.modal-foot-end{justify-content:flex-end;flex-wrap:wrap;gap:8px;}
+
+.overlay-gate{align-items:center;backdrop-filter:blur(3px);}
+.overlay-gate .modal.modal-narrow{max-width:720px;}
+.gate-msg{margin:0;font-size:13.5px;color:var(--gray-700);line-height:1.55;}
+
+.whatsnew-version{
+  display:inline-block;font-family:var(--mono);font-size:11px;font-weight:700;
+  color:var(--accent);background:var(--accent-soft);border-radius:99px;padding:3px 10px;margin-bottom:14px;
+}
+.whatsnew-group{margin-bottom:16px;}
+.whatsnew-group:last-child{margin-bottom:0;}
+.whatsnew-group h4{
+  font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
+  color:var(--gray-500);margin:0 0 8px;
+}
+.whatsnew-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;}
+.whatsnew-list li{
+  position:relative;padding-left:20px;font-size:13px;color:var(--gray-700);line-height:1.45;
+}
+.whatsnew-list li::before{
+  content:"";position:absolute;left:4px;top:7px;width:6px;height:6px;border-radius:50%;background:var(--accent);
+}

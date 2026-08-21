@@ -4,6 +4,15 @@ Todos los cambios relevantes de este proyecto se documentan en este archivo.
 
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y el proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [2.3.0] - 2026-08-21
+
+### Agregado
+- **Arquitectura de Estilos**: Refactorización completa del sistema de estilos migrando a la metodología ITCSS y Diseño Atómico (OOCSS/BEM). Todo el CSS es ahora modular y está organizado en carpetas lógicas.
+
+### Cambiado
+- El código HTML fue limpiado eliminando todos los estilos integrados (`style="..."`) para adoptar un sistema de clases utilitarias (`css/utilities/`).
+- La interfaz general ha recibido ligeros ajustes de márgenes, paddings y colores gracias al nuevo sistema de variables centralizado.
+
 ## [2.2.0] - 2026-08-10
 
 ### Agregado

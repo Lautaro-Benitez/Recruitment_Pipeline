@@ -530,8 +530,8 @@
   //   2. Actualizar RELEASE_NOTES (es/en) con lo que cambió.
   //   3. Agregar la entrada correspondiente en CHANGELOG.md.
   //   4. Actualizar el ?v= de styles.css y app.js en index.html.
-  const APP_VERSION = '2.2.0';
-  const APP_RELEASE_DATE = '2026-08-10'; // AAAA-MM-DD; se muestra formateada en el pie
+  const APP_VERSION = '2.3.0';
+  const APP_RELEASE_DATE = '2026-08-21'; // AAAA-MM-DD; se muestra formateada en el pie
 
   // Notas de la versión actual, mostradas en el modal de novedades cuando
   // el sistema detecta un cambio de versión. Mantener sincronizado con CHANGELOG.md.
@@ -539,12 +539,14 @@
     version: APP_VERSION,
     es: [
       { title:"Nuevo", items:[
+        "Arquitectura de Estilos: Refactorización completa del sistema de estilos migrando a la metodología ITCSS y Diseño Atómico (OOCSS/BEM). Todo el CSS es modular ahora.",
         "Guardado en carpeta: elegís una carpeta una sola vez y la app mantiene ahí un único pipeline.json, siempre el mismo, más copias fechadas en una subcarpeta backups/ que se renuevan solas.",
         "La app ya no se puede usar sin un lugar donde guardar: si no hay ninguno configurado, o se pierde el acceso, pide elegirlo antes de seguir.",
         "Aviso si el archivo fue modificado por fuera de la app (otra pestaña, otra persona, una carpeta sincronizada) antes de pisarlo.",
         "Panel de estado en Configuración: destino, último guardado, última copia en el navegador y cantidad de candidatos guardados."
       ]},
       { title:"Mejorado", items:[
+        "El código HTML fue limpiado eliminando estilos integrados para adoptar un sistema de clases utilitarias.",
         "Después de cada guardado la app relee el archivo para confirmar que quedó completo, en vez de decir \"Guardado\" a ciegas.",
         "El indicador ahora muestra bien la hora del último guardado, con fecha cuando no es de hoy, incluso al abrir la app.",
         "Si pasan más de 10 minutos con cambios sin guardar, aparece un aviso visible en todas las pantallas.",
@@ -553,12 +555,14 @@
     ],
     en: [
       { title:"New", items:[
+        "Styles Architecture: Complete refactoring of the styles system, migrating to the ITCSS methodology and Atomic Design (OOCSS/BEM). All CSS is modular now.",
         "Folder saving: pick a folder once and the app keeps a single pipeline.json in it, always the same file, plus dated copies in a backups/ subfolder that rotate on their own.",
         "The app can no longer be used without a place to save: if none is configured, or access is lost, it asks you to choose one before continuing.",
         "Warning if the file was modified outside the app (another tab, another person, a synced folder) before overwriting it.",
         "Status panel in Settings: destination, last save, last in-browser copy and number of candidates saved."
       ]},
       { title:"Improved", items:[
+        "The HTML code was cleaned by removing inline styles to adopt a utility class system.",
         "After each save the app reads the file back to confirm it came out complete, instead of claiming \"Saved\" blindly.",
         "The indicator now shows the last save time correctly, with the date when it isn't today, including right after opening the app.",
         "If more than 10 minutes go by with unsaved changes, a visible warning appears on every screen.",

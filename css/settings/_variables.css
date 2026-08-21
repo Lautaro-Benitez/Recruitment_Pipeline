@@ -1,0 +1,57 @@
+:root{
+  /* Escala de grises neutra pura (zinc) — sin tinte azul */
+  --gray-50:#fafafa;
+  --gray-100:#f4f4f5;
+  --gray-150:#ececee;
+  --gray-200:#e4e4e7;
+  --gray-300:#d4d4d8;
+  --gray-400:#a1a1aa;
+  --gray-500:#71717a;
+  --gray-600:#52525b;
+  --gray-700:#3f3f46;
+  --gray-800:#27272a;
+  --gray-900:#18181b;
+  --gray-950:#0f0f11;
+
+  /* Roles semánticos */
+  --bg:var(--gray-100);            /* fondo general claro */
+  --panel:#ffffff;                 /* contenedores */
+  --panel-sunken:var(--gray-50);   /* inputs / zonas hundidas */
+  --ink:var(--gray-900);           /* texto principal */
+  --ink-soft:var(--gray-500);      /* texto secundario */
+  --line:var(--gray-200);          /* bordes */
+  --line-soft:var(--gray-150);     /* bordes sutiles */
+  --neutral-soft:var(--gray-100);
+
+  /* Sidebar gris oscuro neutro */
+  --nav-bg:var(--gray-900);
+  --nav-ink:var(--gray-300);
+  --nav-ink-soft:var(--gray-500);
+  --nav-hover:var(--gray-800);
+  --nav-active-bg:var(--gray-700);
+  --nav-active-ink:#ffffff;
+  --nav-line:var(--gray-800);
+
+  /* Acción primaria (azul) */
+  --accent:#2563eb;
+  --accent-hover:#1d4ed8;
+  --accent-soft:#dbeafe;
+  --accent-ink:#1e40af;
+
+  /* Positivo / advertencia / destructivo */
+  --ok:#15803d;
+  --ok-soft:#dcfce7;
+  --warn:#b45309;
+  --warn-soft:#fef3c7;
+  --bad:#dc2626;
+  --bad-hover:#b91c1c;
+  --bad-soft:#fee2e2;
+
+  --radius:8px;
+  --radius-lg:12px;
+  --mono: "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  --sidebar-w:230px;
+  --sidebar-w-collapsed:64px;
+  --shadow-sm:0 1px 2px rgba(24,24,27,.06);
+  --shadow-md:0 4px 12px rgba(24,24,27,.08);
+}

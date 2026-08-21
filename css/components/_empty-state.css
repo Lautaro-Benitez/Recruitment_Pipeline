@@ -1,0 +1,4 @@
+.empty-state{
+  text-align:center;padding:60px 20px;color:var(--ink-soft);
+}
+.empty-state strong{display:block;color:var(--ink);font-size:15px;margin-bottom:6px;}

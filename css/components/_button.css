@@ -1,0 +1,40 @@
+.btn{
+  padding:8px 14px;border-radius:7px;border:1px solid var(--line);
+  background:var(--panel);color:var(--gray-700);font-size:13px;font-weight:600;cursor:pointer;
+  transition:background .15s, border-color .15s, color .15s;white-space:nowrap;
+}
+.btn:hover{background:var(--gray-100);border-color:var(--gray-300);}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+.btn-primary:hover{background:var(--accent-hover);border-color:var(--accent-hover);}
+.btn-danger{background:var(--bad);color:#fff;border-color:var(--bad);}
+.btn-danger:hover{background:var(--bad-hover);border-color:var(--bad-hover);}
+.btn-sm{padding:5px 10px;font-size:12px;}
+.btn-ghost{background:transparent;border:1px solid var(--line);color:var(--gray-600);}
+.btn-ghost:hover{background:var(--gray-100);}
+
+/* ---- Botón X unificado (cerrar / eliminar) ---- */
+.btn-x{
+  border:none;background:transparent;cursor:pointer;
+  width:30px;height:30px;border-radius:7px;flex:0 0 auto;
+  display:inline-flex;align-items:center;justify-content:center;
+  color:var(--gray-400);transition:background .15s, color .15s;padding:0;
+}
+.btn-x svg{width:16px;height:16px;display:block;}
+.btn-x:hover{background:var(--bad-soft);color:var(--bad);}
+.btn-x.btn-x-sm{width:26px;height:26px;border-radius:6px;}
+.btn-x.btn-x-sm svg{width:14px;height:14px;}
+
+.icon-btn{
+  border:1px solid var(--gray-300);background:var(--panel);border-radius:7px;
+  width:38px;height:38px;flex:0 0 auto;cursor:pointer;color:var(--gray-500);
+  display:flex;align-items:center;justify-content:center;transition:background .15s, color .15s, border-color .15s;
+}
+.icon-btn svg{width:17px;height:17px;}
+.icon-btn:hover{background:var(--gray-100);color:var(--gray-700);border-color:var(--gray-400);}
+
+.icon-btn-xs{
+  border:1px solid var(--gray-300);background:var(--panel);border-radius:6px;
+  width:28px;height:28px;flex:0 0 auto;cursor:pointer;color:var(--gray-500);
+  display:flex;align-items:center;justify-content:center;transition:background .15s, color .15s, border-color .15s;
+}
+.icon-btn-xs:hover{background:var(--gray-100);color:var(--gray-700);border-color:var(--gray-400);}

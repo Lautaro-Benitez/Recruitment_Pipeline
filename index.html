@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pipeline de Reclutamiento</title>
 <!-- El ?v= es cache-busting: subir junto con APP_VERSION en app.js -->
-<link rel="stylesheet" href="styles.css?v=2.2.0">
+<link rel="stylesheet" href="styles.css?v=2.2.3">
 </head>
 <body>
 <div class="shell">
@@ -24,7 +24,7 @@
       <button class="nav-btn active" data-view="dashboard" data-i18n-title="navDashboard">
         <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg></span>
         <span class="nav-label" data-i18n="navDashboard">Dashboard</span>
-        <span class="nav-badge" id="navAlertBadge" style="display:none;"></span>
+        <span class="nav-badge u-d-none" id="navAlertBadge"></span>
       </button>
       <button class="nav-btn" data-view="database" data-i18n-title="navDatabase">
         <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.66 3.58 3 8 3s8-1.34 8-3V5"/><path d="M4 11v6c0 1.66 3.58 3 8 3s8-1.34 8-3v-6"/></svg></span>
@@ -48,10 +48,6 @@
           <p data-i18n="dashSubtitle">Métricas del pipeline en base a los filtros seleccionados</p>
         </div>
         <div class="topbar-right">
-          <div class="save-indicator" id="topSaveIndicator" title="">
-            <span class="save-dot" id="topSaveDot"></span>
-            <span id="topSaveText">—</span>
-          </div>
           <div class="lang-switch">
             <button class="lang-btn" data-lang="es">ES</button>
             <button class="lang-btn" data-lang="en">EN</button>
@@ -60,7 +56,7 @@
       </div>
 
       <!-- Aviso global: hace demasiado que hay cambios sin guardar -->
-      <div class="stale-banner" id="staleSaveBanner" style="display:none;">
+      <div class="stale-banner u-d-none" id="staleSaveBanner">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
         <span id="staleSaveText"></span>
         <button class="btn btn-sm btn-primary" id="staleSaveBtn" data-i18n="saveNowBtn">Guardar</button>
@@ -68,30 +64,26 @@
 
       <!-- ===================== DASHBOARD ===================== -->
       <section class="view active" id="view-dashboard">
-        <div class="report-header" id="reportHeader">
-          <div class="report-brand">
-            <h1 data-i18n="appTitle">Pipeline de Reclutamiento</h1>
-            <span data-i18n="reportTitle">Reporte de pipeline</span>
-          </div>
-          <div class="report-meta" id="reportMeta"></div>
-        </div>
-
         <div class="dash-toolbar">
-          <span class="dlabel" data-i18n="filtersLabel">Filtros:</span>
-          <select id="dashFilterJobTitle"><option value="" data-i18n="allJobTitles">Título profesional: todos</option></select>
-          <select id="dashFilterPosition"><option value="" data-i18n="allPositions">Posición: todas</option></select>
-          <select id="dashFilterStatus"><option value="" data-i18n="allStatuses">Estado: todos</option></select>
-          <select id="dashFilterStage"><option value="" data-i18n="allStages">Etapa: todas</option></select>
-          <select id="dashFilterRecruiter"><option value="" data-i18n="allRecruiters">Reclutador/a: todos</option></select>
-          <select id="dashFilterClient"><option value="" data-i18n="allClients">Cliente: todos</option></select>
-          <span class="dlabel" data-i18n="dateFromLabel">Desde</span>
-          <input type="date" id="dashFilterDateFrom">
-          <span class="dlabel" data-i18n="dateToLabel">Hasta</span>
-          <input type="date" id="dashFilterDateTo">
-          <div class="spacer"></div>
-          <button class="btn btn-ghost" id="dashClearFilters" data-i18n="clearFilters">Limpiar filtros</button>
-          <button class="btn" id="dashExportFilteredBtn" data-i18n="exportFiltered">Exportar filtrado (CSV)</button>
-          <button class="btn btn-primary" id="dashPrintBtn" data-i18n="printReport">Imprimir reporte</button>
+          <div class="dash-row">
+            <span class="dlabel" data-i18n="filtersLabel">Filtros:</span>
+            <select id="dashFilterJobTitle"><option value="" data-i18n="allJobTitles">Título profesional: todos</option></select>
+            <select id="dashFilterPosition"><option value="" data-i18n="allPositions">Posición: todas</option></select>
+            <select id="dashFilterStatus"><option value="" data-i18n="allStatuses">Estado: todos</option></select>
+            <select id="dashFilterStage"><option value="" data-i18n="allStages">Etapa: todas</option></select>
+            <select id="dashFilterRecruiter"><option value="" data-i18n="allRecruiters">Reclutador/a: todos</option></select>
+            <select id="dashFilterClient"><option value="" data-i18n="allClients">Cliente: todos</option></select>
+          </div>
+          <div class="dash-row">
+            <span class="dlabel" data-i18n="dateFromLabel">Desde</span>
+            <input type="date" id="dashFilterDateFrom">
+            <span class="dlabel" data-i18n="dateToLabel">Hasta</span>
+            <input type="date" id="dashFilterDateTo">
+            <div class="spacer"></div>
+            <button class="btn btn-ghost" id="dashClearFilters" data-i18n="clearFilters">Limpiar filtros</button>
+            <button class="btn" id="dashExportFilteredBtn" data-i18n="exportFiltered">Exportar filtrado (CSV)</button>
+            <button class="btn btn-primary" id="dashPrintBtn" data-i18n="printReport">Imprimir reporte</button>
+          </div>
         </div>
 
         <div class="kpi-grid" id="kpiGrid"></div>
@@ -161,15 +153,19 @@
       <!-- ===================== DATABASE ===================== -->
       <section class="view" id="view-database">
         <div class="toolbar">
-          <input type="text" id="searchInput" data-i18n-ph="searchPlaceholder" placeholder="Buscar por nombre, empresa, universidad, notas...">
-          <select id="filterJobTitle"><option value="" data-i18n="allJobTitles">T&iacute;tulo profesional: todos</option></select>
-          <select id="filterPosition"><option value="" data-i18n="allPositions">Posición: todas</option></select>
-          <select id="filterStatus"><option value="" data-i18n="allStatuses">Estado: todos</option></select>
-          <select id="filterStage"><option value="" data-i18n="allStages">Etapa: todas</option></select>
-          <select id="filterRecruiter"><option value="" data-i18n="allRecruiters">Reclutador/a: todos</option></select>
-          <select id="filterClient"><option value="" data-i18n="allClients">Cliente: todos</option></select>
-          <div class="spacer"></div>
-          <button class="btn btn-primary" id="addCandidateBtn" data-i18n="newCandidateBtn">+ Nuevo candidato</button>
+          <div class="dash-row">
+            <input type="text" id="searchInput" data-i18n-ph="searchPlaceholder" placeholder="Buscar por nombre, empresa, universidad, notas...">
+            <select id="filterJobTitle"><option value="" data-i18n="allJobTitles">T&iacute;tulo profesional: todos</option></select>
+            <select id="filterPosition"><option value="" data-i18n="allPositions">Posición: todas</option></select>
+            <select id="filterStatus"><option value="" data-i18n="allStatuses">Estado: todos</option></select>
+            <select id="filterStage"><option value="" data-i18n="allStages">Etapa: todas</option></select>
+            <select id="filterRecruiter"><option value="" data-i18n="allRecruiters">Reclutador/a: todos</option></select>
+            <select id="filterClient"><option value="" data-i18n="allClients">Cliente: todos</option></select>
+          </div>
+          <div class="dash-row">
+            <div class="spacer"></div>
+            <button class="btn btn-primary" id="addCandidateBtn" data-i18n="newCandidateBtn">+ Nuevo candidato</button>
+          </div>
         </div>
 
         <div class="table-wrap">
@@ -239,7 +235,7 @@
                 </div>
               </div>
 
-              <div class="inline-banner" id="reconnectBanner" style="display:none;">
+              <div class="inline-banner u-d-none" id="reconnectBanner">
                 <span data-i18n="reconnectNeeded">Se perdió el acceso al archivo conectado.</span>
                 <button class="btn btn-sm" id="reconnectBtn" data-i18n="reconnectBtn">Reconectar</button>
               </div>
@@ -249,7 +245,7 @@
                 <button class="btn" id="chooseFolderBtn" data-i18n="chooseFolderBtn">Elegir carpeta...</button>
                 <button class="btn" id="saveAsBtn" data-i18n="saveAsBtn">Guardar como...</button>
                 <button class="btn" id="openFileBtn" data-i18n="openFileBtn">Abrir...</button>
-                <input type="file" id="fileOpenJsonInput" accept=".json" style="display:none;">
+                <input type="file" id="fileOpenJsonInput" accept=".json" class="u-d-none">
               </div>
 
               <div class="storage-health">
@@ -399,11 +395,11 @@
       <button class="btn-x" id="confirmOpenXBtn" title="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
     </div>
     <div class="modal-body">
-      <p style="margin:0;font-size:13.5px;color:var(--gray-700);line-height:1.5;" data-i18n="confirmOpenMsg">Si abrís otro archivo ahora, los cambios sin guardar de este pipeline se van a perder. ¿Qué querés hacer?</p>
+      <p class="u-m-0 u-text-sm u-color-gray-700 u-line-height-base" data-i18n="confirmOpenMsg">Si abrís otro archivo ahora, los cambios sin guardar de este pipeline se van a perder. ¿Qué querés hacer?</p>
     </div>
     <div class="modal-foot">
       <button class="btn" id="confirmOpenCancelBtn" data-i18n="cancelBtn">Cancelar</button>
-      <div style="display:flex;gap:8px;">
+      <div class="u-d-flex u-flex-gap-8">
         <button class="btn btn-danger" id="confirmOpenDiscardBtn" data-i18n="confirmOpenDiscard">Descartar y abrir</button>
         <button class="btn btn-primary" id="confirmOpenSaveBtn" data-i18n="confirmOpenSaveFirst">Guardar y abrir</button>
       </div>
@@ -419,10 +415,10 @@
       <button class="btn-x" id="errorModalXBtn" title="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
     </div>
     <div class="modal-body">
-      <p id="errorModalMessageText" style="margin:0 0 10px;font-size:13.5px;color:var(--gray-700);line-height:1.5;"></p>
+      <p id="errorModalMessageText" class="u-m-0 u-mb-10 u-text-sm u-color-gray-700 u-line-height-base"></p>
       <details>
-        <summary style="cursor:pointer;font-size:11.5px;color:var(--ink-soft);" data-i18n="errorModalDetailToggle">Detalle técnico</summary>
-        <pre id="errorModalDetailText" style="white-space:pre-wrap;font-size:11px;color:var(--gray-500);background:var(--gray-50);border-radius:6px;padding:8px;margin-top:6px;max-height:160px;overflow:auto;"></pre>
+        <summary class="u-cursor-pointer u-text-xs u-color-ink-soft" data-i18n="errorModalDetailToggle">Detalle técnico</summary>
+        <pre id="errorModalDetailText" class="u-text-mono-xs u-color-gray-500 u-mt-6"></pre>
       </details>
     </div>
     <div class="modal-foot">
@@ -590,8 +586,8 @@
       </form>
     </div>
     <div class="modal-foot">
-      <button class="btn btn-danger" id="deleteBtn" style="display:none;" data-i18n="deleteCandidateBtn">Eliminar candidato</button>
-      <div style="display:flex;gap:10px;margin-left:auto;">
+      <button class="btn btn-danger u-d-none" id="deleteBtn" data-i18n="deleteCandidateBtn">Eliminar candidato</button>
+      <div class="u-d-flex u-flex-gap-10 u-ml-auto">
         <button class="btn" id="cancelBtn" data-i18n="cancelBtn">Cancelar</button>
         <button class="btn btn-primary" id="saveBtn" data-i18n="saveBtn">Guardar</button>
       </div>
@@ -599,6 +595,6 @@
   </div>
 </div>
 
-<script src="app.js?v=2.2.0"></script>
+<script src="app.js?v=2.2.1"></script>
 </body>
 </html>

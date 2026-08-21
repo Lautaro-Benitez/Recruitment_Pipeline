@@ -1,0 +1,12 @@
+.app-footer{
+  flex:0 0 auto;border-top:1px solid var(--line);background:var(--panel);
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;
+  font-size:11.5px;color:var(--ink-soft);padding:12px 28px;
+}
+.app-footer .footer-credit{font-weight:600;color:var(--gray-600);}
+.app-footer .footer-version{
+  font-family:var(--mono);color:var(--gray-400);
+  cursor:pointer;border-radius:4px;padding:2px 5px;transition:background .15s, color .15s;
+}
+.app-footer .footer-version:hover{color:var(--gray-600);background:var(--gray-100);}
+.app-footer .footer-version:focus-visible{outline:2px solid var(--gray-400);outline-offset:1px;}

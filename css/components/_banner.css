@@ -1,0 +1,15 @@
+.stale-banner{
+  display:flex;align-items:center;gap:10px;
+  margin-bottom:14px;padding:10px 14px;border-radius:8px;
+  background:var(--bad-soft);border:1px solid var(--bad);
+  color:var(--bad);font-size:13px;font-weight:600;
+}
+.stale-banner svg{width:18px;height:18px;flex:0 0 auto;}
+.stale-banner span{flex:1;}
+
+.inline-banner{
+  display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap;
+  background:var(--warn-soft);border:1px solid #f3d99a;color:var(--warn);
+  border-radius:8px;padding:9px 12px;font-size:12.5px;margin-bottom:12px;
+}
+.inline-banner strong{font-weight:700;}

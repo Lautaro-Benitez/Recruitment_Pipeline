@@ -1,0 +1,10 @@
+.trend-wrap{overflow-x:auto;}
+.trend-legend{display:flex;gap:18px;margin-top:10px;font-size:12px;color:var(--ink-soft);}
+.trend-legend span{display:inline-flex;align-items:center;gap:6px;}
+.legend-dot{width:9px;height:9px;border-radius:50%;display:inline-block;}
+
+.alert-row{
+  display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid var(--line-soft);font-size:12.5px;
+}
+.alert-row:last-child{border-bottom:none;}
+.alert-row .alert-name{font-weight:600;flex:1;color:var(--gray-800);}

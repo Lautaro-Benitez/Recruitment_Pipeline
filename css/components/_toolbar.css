@@ -1,0 +1,21 @@
+.toolbar{
+  display:flex;flex-direction:column;gap:10px;
+  margin-bottom:14px;
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:12px 14px;
+  box-shadow:var(--shadow-sm);
+}
+.toolbar .dash-row{
+  display:flex;gap:10px;flex-wrap:wrap;align-items:center;width:100%;
+}
+.toolbar input[type="text"]{
+  padding:8px 10px;border:1px solid var(--gray-300);border-radius:7px;font-size:13px;
+  background:var(--panel);color:var(--ink);max-width:200px;
+}
+.toolbar select{
+  padding:8px 10px;border:1px solid var(--gray-300);border-radius:7px;font-size:13px;
+  background:var(--panel);color:var(--ink);
+  max-width:150px;
+}

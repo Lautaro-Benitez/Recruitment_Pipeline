@@ -1,0 +1,8 @@
+.lang-switch{display:flex;gap:2px;background:var(--gray-150);padding:3px;border-radius:99px;flex:0 0 auto;}
+.lang-btn{
+  border:none;background:transparent;padding:6px 13px;border-radius:99px;
+  font-size:12px;font-weight:700;color:var(--ink-soft);cursor:pointer;letter-spacing:.02em;
+  transition:background .15s, color .15s;
+}
+.lang-btn.active{background:var(--accent);color:#fff;}
+.lang-btn:hover:not(.active){color:var(--ink);}

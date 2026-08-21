@@ -1,0 +1,11 @@
+.badge{
+  display:inline-block;padding:2px 10px;border-radius:99px;font-size:11px;font-weight:600;
+  white-space:nowrap;
+}
+.badge-progress{background:var(--accent-soft);color:var(--accent-ink);}
+.badge-hired{background:var(--ok-soft);color:var(--ok);}
+.badge-hold{background:var(--warn-soft);color:var(--warn);}
+.badge-rejected{background:var(--bad-soft);color:var(--bad);}
+.badge-withdrawn{background:var(--gray-150);color:var(--gray-600);}
+.badge-alert-overdue{background:var(--bad-soft);color:var(--bad);}
+.badge-alert-stale{background:var(--warn-soft);color:var(--warn);}
